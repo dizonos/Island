@@ -8,23 +8,23 @@
 
 **Don't Starve Shipwrecked**:
 - [ссылка](https://dont-starve.fandom.com/ru/wiki/Don%27t_Starve:_Shipwrecked)
-- ![](C:\Users\Брутальный Павлик\AppData\Roaming\Caret Beta\Introduction\.pastes\2021-12-15-21-40-09.png)картинка
+- ![image](https://user-images.githubusercontent.com/72749159/146246695-962784d9-9414-45f1-b1b6-85f88553464b.png)
 
 **Minecraft**:
 - https://ru.wikipedia.org/wiki/Minecraft
-- ![](C:\Users\Брутальный Павлик\AppData\Roaming\Caret Beta\Introduction\.pastes\2021-12-15-21-40-59.png)картинка
+- ![image](https://user-images.githubusercontent.com/72749159/146246718-1c5bd8cf-1d64-407e-acb8-fe4b82ec45d6.png)
 
 **Terraria**:
 - [ссылка](https://ru.wikipedia.org/wiki/Terraria)
-- ![](C:\Users\Брутальный Павлик\AppData\Roaming\Caret Beta\Introduction\.pastes\2021-12-15-21-41-19.png)картинка
+- ![image](https://user-images.githubusercontent.com/72749159/146246743-b91d9bc3-d47e-4366-9343-3eeb9fb4ef8d.png)
 
 **The long dark**:
 - [ссылка](https://ru.wikipedia.org/wiki/The_Long_Dark)
-- ![](C:\Users\Брутальный Павлик\AppData\Roaming\Caret Beta\Introduction\.pastes\2021-12-15-21-41-40.png)картинка
+- ![image](https://user-images.githubusercontent.com/72749159/146246762-f76c6e6a-9949-4470-95d1-26d24df88b49.png)
 
 **Samorost**:
 - [ссылка](https://ru.wikipedia.org/wiki/Samorost)
-- ![](C:\Users\Брутальный Павлик\AppData\Roaming\Caret Beta\Introduction\.pastes\2021-12-15-21-42-06.png)картинка
+- ![image](https://user-images.githubusercontent.com/72749159/146246782-c98dd77b-8f74-4f4b-b313-9047857ff805.png)
 
 ## Управление
 
