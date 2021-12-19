@@ -30,7 +30,7 @@ def main():
 
 
 class Land(pygame.sprite.Sprite):
-    image = load_image('main_background.jpg')
+    image = load_image('задник для игры.png')
 
     def __init__(self, group):
         super().__init__(group)
@@ -39,14 +39,14 @@ class Land(pygame.sprite.Sprite):
 
 
 class MenuButton(pygame.sprite.Sprite):
-    image = load_image('button.png')
     # загрузка глав меню
-    def __init__(self, x, y, group):
+    def __init__(self, x, y, group, name):
         super().__init__(all_sprites)
-        self.image = MenuButton.image
+        self.image = load_image(name, -1)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
+        self.mask = pygame.mask.from_surface(self.image)
         self.add(group)
 
     def update(self, *args):
@@ -57,7 +57,7 @@ class MenuButton(pygame.sprite.Sprite):
                 main()
             elif 450 <= args[0].pos[1] <= 550:
                 print('poka ne gotovo')
-            elif 600 <= args[0].pos[1] <= 700:
+            else:
                 running = False
                 return
 
@@ -68,9 +68,9 @@ button_sprites = pygame.sprite.Group()
 running = True
 
 Land(all_sprites)
-start = MenuButton(25, 300, button_sprites)
-MenuButton(25, 450, button_sprites)
-MenuButton(25, 600, button_sprites)
+MenuButton(0, 200, button_sprites, 'new_game.png')
+MenuButton(0, 400, button_sprites, 'load_game.png')
+MenuButton(537, 662, button_sprites, 'exit.png')
 
 # надо бы как-то текст подобрать, чтоб прям на кпопках писало, мб будет проще на текстуре написать
 
