@@ -3,7 +3,8 @@ import os
 
 pygame.init()
 
-size = width, height = 1920, 1080
+infoObject = pygame.display.Info()
+size = width, height = infoObject.current_w, infoObject.current_h
 screen = pygame.display.set_mode(size)
 pygame.display.set_caption('Island')
 
@@ -53,9 +54,9 @@ class MenuButton(pygame.sprite.Sprite):
         global running
         if args and args[0].type == pygame.MOUSEBUTTONDOWN and \
                 self.rect.collidepoint(args[0].pos):  # мб есть какой-то более лёгкий спсобо опредления нажата ли кнопка или нет, но я не искал dizonos
-            if 300 <= args[0].pos[1] <= 400:
+            if 200 <= args[0].pos[1] <= 340:
                 main()
-            elif 450 <= args[0].pos[1] <= 550:
+            elif 400 <= args[0].pos[1] <= 550:
                 print('poka ne gotovo')
             else:
                 running = False
@@ -68,19 +69,18 @@ button_sprites = pygame.sprite.Group()
 running = True
 
 Land(all_sprites)
-MenuButton(0, 200, button_sprites, 'new_game.png')
-MenuButton(0, 400, button_sprites, 'load_game.png')
-MenuButton(537, 662, button_sprites, 'exit.png')
+start = MenuButton(0, 200, button_sprites, 'new_game.png')
+load = MenuButton(0, 400, button_sprites, 'load_game.png')
+exit = MenuButton(537, 662, button_sprites, 'exit.png')
 
 # надо бы как-то текст подобрать, чтоб прям на кпопках писало, мб будет проще на текстуре написать
 
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            terminate()
         if event.type == pygame.MOUSEBUTTONDOWN:
             button_sprites.update(event)
     screen.fill((0, 0, 0))
     all_sprites.draw(screen)
     pygame.display.flip()
-pygame.quit()
