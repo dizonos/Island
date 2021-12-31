@@ -69,11 +69,14 @@ class NewGameTablet(pygame.sprite.Sprite):
             screen.fill('#99D9EA', self.rect)
             self.rect.x = self.pos_x + 10
             self.col_flag = True
+            self.image = pygame.transform.scale(NewGameTablet.active_image,
+                                                (250, 70))
             tablet_sprites.draw(screen)
         elif self.col_flag and not self.rect.collidepoint(args[0].pos):
             screen.fill('#99D9EA', self.rect)
             self.rect.x = self.pos_x
             self.col_flag = False
+            self.image = pygame.transform.scale(NewGameTablet.image, (250, 70))
             tablet_sprites.draw(screen)
 
     def update(self, *args):
@@ -81,12 +84,6 @@ class NewGameTablet(pygame.sprite.Sprite):
             if args[0].type == pygame.MOUSEMOTION:
                 self.tablet_moving(args)
             if args[0].type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(args[0].pos):
-                # следующий код посвечивает кнопку, если на неё нажать
-                self.image = pygame.transform.scale(NewGameTablet.active_image, (250, 70))
-                tablet_sprites.draw(screen)
-                self.image = pygame.transform.scale(NewGameTablet.image, (250, 70))
-
-                # далее стоит описывать функционал каждой отдельной кнопки
                 tablet_sprites.empty()
                 screen.blit(background_picture, (0, 0))
 
@@ -106,15 +103,26 @@ class ContinueTablet(NewGameTablet):
         super().__init__(pos_x, pos_y, *group)
         self.image = pygame.transform.scale(ContinueTablet.image, (250, 70))
 
+    def tablet_moving(self, args):
+        if not self.col_flag and self.rect.collidepoint(args[0].pos):
+            screen.fill('#99D9EA', self.rect)
+            self.rect.x = self.pos_x + 10
+            self.col_flag = True
+            self.image = pygame.transform.scale(ContinueTablet.active_image,
+                                                (250, 70))
+            tablet_sprites.draw(screen)
+        elif self.col_flag and not self.rect.collidepoint(args[0].pos):
+            screen.fill('#99D9EA', self.rect)
+            self.rect.x = self.pos_x
+            self.col_flag = False
+            self.image = pygame.transform.scale(ContinueTablet.image, (250, 70))
+            tablet_sprites.draw(screen)
+
     def update(self, *args):
         if args:
             if args[0].type == pygame.MOUSEMOTION:
                 self.tablet_moving(args)
             if args[0].type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(args[0].pos):
-                self.image = pygame.transform.scale(ContinueTablet.active_image, (250, 70))
-                tablet_sprites.draw(screen)
-                self.image = pygame.transform.scale(ContinueTablet.image, (250, 70))
-
                 tablet_sprites.empty()
                 screen.blit(background_picture, (0, 0))
 
@@ -133,13 +141,26 @@ class ExitTablet(NewGameTablet):
         super().__init__(pos_x, pos_y, *group)
         self.image = pygame.transform.scale(ExitTablet.image, (250, 70))
 
+    def tablet_moving(self, args):
+        if not self.col_flag and self.rect.collidepoint(args[0].pos):
+            screen.fill('#99D9EA', self.rect)
+            self.rect.x = self.pos_x + 10
+            self.col_flag = True
+            self.image = pygame.transform.scale(ExitTablet.active_image,
+                                                (250, 70))
+            tablet_sprites.draw(screen)
+        elif self.col_flag and not self.rect.collidepoint(args[0].pos):
+            screen.fill('#99D9EA', self.rect)
+            self.rect.x = self.pos_x
+            self.col_flag = False
+            self.image = pygame.transform.scale(ExitTablet.image, (250, 70))
+            tablet_sprites.draw(screen)
+
     def update(self, *args):
         if args:
             if args[0].type == pygame.MOUSEMOTION:
                 self.tablet_moving(args)
             if args[0].type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(args[0].pos):
-                self.image = pygame.transform.scale(ExitTablet.active_image, (250, 70))
-                tablet_sprites.draw(screen)
                 terminate()
 
 
@@ -151,15 +172,26 @@ class LoadTablet(NewGameTablet):
         super().__init__(pos_x, pos_y, *group)
         self.image = pygame.transform.scale(LoadTablet.image, (250, 70))
 
+    def tablet_moving(self, args):
+        if not self.col_flag and self.rect.collidepoint(args[0].pos):
+            screen.fill('#99D9EA', self.rect)
+            self.rect.x = self.pos_x + 10
+            self.col_flag = True
+            self.image = pygame.transform.scale(LoadTablet.active_image,
+                                                (250, 70))
+            tablet_sprites.draw(screen)
+        elif self.col_flag and not self.rect.collidepoint(args[0].pos):
+            screen.fill('#99D9EA', self.rect)
+            self.rect.x = self.pos_x
+            self.col_flag = False
+            self.image = pygame.transform.scale(LoadTablet.image, (250, 70))
+            tablet_sprites.draw(screen)
+
     def update(self, *args):
         if args:
             if args[0].type == pygame.MOUSEMOTION:
                 self.tablet_moving(args)
             if args[0].type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(args[0].pos):
-                self.image = pygame.transform.scale(LoadTablet.active_image, (250, 70))
-                tablet_sprites.draw(screen)
-                self.image = pygame.transform.scale(LoadTablet.image, (250, 70))
-
                 tablet_sprites.empty()
                 screen.blit(background_picture, (0, 0))
 
@@ -178,15 +210,26 @@ class SettingsTablet(NewGameTablet):
         super().__init__(pos_x, pos_y, *group)
         self.image = pygame.transform.scale(SettingsTablet.image, (250, 70))
 
+    def tablet_moving(self, args):
+        if not self.col_flag and self.rect.collidepoint(args[0].pos):
+            screen.fill('#99D9EA', self.rect)
+            self.rect.x = self.pos_x + 10
+            self.col_flag = True
+            self.image = pygame.transform.scale(SettingsTablet.active_image,
+                                                (250, 70))
+            tablet_sprites.draw(screen)
+        elif self.col_flag and not self.rect.collidepoint(args[0].pos):
+            screen.fill('#99D9EA', self.rect)
+            self.rect.x = self.pos_x
+            self.col_flag = False
+            self.image = pygame.transform.scale(SettingsTablet.image, (250, 70))
+            tablet_sprites.draw(screen)
+
     def update(self, *args):
         if args:
             if args[0].type == pygame.MOUSEMOTION:
                 self.tablet_moving(args)
             if args[0].type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(args[0].pos):
-                self.image = pygame.transform.scale(SettingsTablet.active_image, (250, 70))
-                tablet_sprites.draw(screen)
-                self.image = pygame.transform.scale(SettingsTablet.image, (250, 70))
-
                 tablet_sprites.empty()
                 screen.blit(background_picture, (0, 0))
 
@@ -205,15 +248,26 @@ class HelpTablet(NewGameTablet):
         super().__init__(pos_x, pos_y, *group)
         self.image = pygame.transform.scale(HelpTablet.image, (250, 70))
 
+    def tablet_moving(self, args):
+        if not self.col_flag and self.rect.collidepoint(args[0].pos):
+            screen.fill('#99D9EA', self.rect)
+            self.rect.x = self.pos_x + 10
+            self.col_flag = True
+            self.image = pygame.transform.scale(HelpTablet.active_image,
+                                                (250, 70))
+            tablet_sprites.draw(screen)
+        elif self.col_flag and not self.rect.collidepoint(args[0].pos):
+            screen.fill('#99D9EA', self.rect)
+            self.rect.x = self.pos_x
+            self.col_flag = False
+            self.image = pygame.transform.scale(HelpTablet.image, (250, 70))
+            tablet_sprites.draw(screen)
+
     def update(self, *args):
         if args:
             if args[0].type == pygame.MOUSEMOTION:
                 self.tablet_moving(args)
             if args[0].type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(args[0].pos):
-                self.image = pygame.transform.scale(HelpTablet.active_image, (250, 70))
-                tablet_sprites.draw(screen)
-                self.image = pygame.transform.scale(HelpTablet.image, (250, 70))
-
                 tablet_sprites.empty()
                 screen.blit(background_picture, (0, 0))
 
@@ -228,14 +282,32 @@ class HelpTablet(NewGameTablet):
 # используется в найстойках, помощи и загрузке для возврата на главный экран
 class BackButton(pygame.sprite.Sprite):
     image = load_image('back_button.png')
+    active_image = load_image('back_button_active.png')
 
     def __init__(self, *group):
         super().__init__(*group)
         self.image = pygame.transform.scale(BackButton.image, (250, 70))
         self.rect = self.image.get_rect().move(SCREEN_WIDTH - 260, SCREEN_HEIGHT - 80)
+        self.col_flag = False
+
+    def tablet_moving(self, args):
+        if not self.col_flag and self.rect.collidepoint(args[0].pos):
+            screen.fill('#99D9EA', self.rect)
+            self.col_flag = True
+            self.image = pygame.transform.scale(BackButton.active_image,
+                                                (250, 70))
+            backbutton_sprite.draw(screen)
+        elif self.col_flag and not self.rect.collidepoint(args[0].pos):
+            screen.fill('#99D9EA', self.rect)
+            self.col_flag = False
+            self.image = pygame.transform.scale(BackButton.image,
+                                                (250, 70))
+            backbutton_sprite.draw(screen)
 
     def update(self, *args):
         if args:
+            if args[0].type == pygame.MOUSEMOTION:
+                self.tablet_moving(args)
             if args[0].type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(args[0].pos):
                 backbutton_sprite.empty()
                 main_screen_init()
@@ -281,7 +353,7 @@ if __name__ == '__main__':
 
     main_screen_init()
 
-    # добавим в главное меню немного звуков
+    # добавим в главное меню немного звуков (их стоит зациклить)
     pygame.mixer.init()
     pygame.mixer.music.load('data/main_menu_sound.mp3')
     pygame.mixer.music.play()
@@ -300,4 +372,5 @@ if __name__ == '__main__':
                 backbutton_sprite.update(event)
             elif event.type == pygame.MOUSEMOTION:
                 tablet_sprites.update(event)
+                backbutton_sprite.update(event)
             pygame.display.flip()
