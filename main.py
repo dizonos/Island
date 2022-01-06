@@ -511,12 +511,12 @@ def main_screen_init():
     screen.blit(background_picture, (0, 0))
 
     # инициализация кнопок главного меню
-    new_tablet = NewGameTablet(20, 200, tablet_sprites)
-    continue_tablet = ContinueTablet(20, 280, tablet_sprites)
-    load_tablet = LoadTablet(20, 360, tablet_sprites)
-    settings_tablet = SettingsTablet(20, 440, tablet_sprites)
-    help_tablet = HelpTablet(20, 520, tablet_sprites)
-    exit_tablet = ExitTablet(20, 600, tablet_sprites)
+    new_tablet = NewGameTablet(20, 210, tablet_sprites)
+    continue_tablet = ContinueTablet(20, 290, tablet_sprites)
+    load_tablet = LoadTablet(20, 370, tablet_sprites)
+    settings_tablet = SettingsTablet(20, 450, tablet_sprites)
+    help_tablet = HelpTablet(20, 530, tablet_sprites)
+    exit_tablet = ExitTablet(20, 610, tablet_sprites)
     tablet_sprites.draw(screen)
 
     # выводим большую надпись ISLAND
@@ -524,8 +524,8 @@ def main_screen_init():
 
 
 if __name__ == '__main__':
-    background_picture = pygame.transform.scale(load_image('test_image.png'),
-                                                SCREENSIZE)
+    background_picture = pygame.transform.scale(load_image(
+        'background_image.png'), SCREENSIZE)
 
     tablet_sprites = pygame.sprite.Group()
     backbutton_sprite = pygame.sprite.Group()
