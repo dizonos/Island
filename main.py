@@ -16,13 +16,6 @@ pygame.display.set_caption("Island")
 screen = pygame.display.set_mode(SCREENSIZE)
 
 
-# функция завершения работы программы
-def terminate():
-    pygame.quit()
-    sys.exit()
-
-
-# функция загрузки изображений
 def load_image(name, color_key=None):
     fullname = os.path.join('data', name)
     try:
@@ -39,6 +32,141 @@ def load_image(name, color_key=None):
         image = image.convert_alpha()
     return image
 
+
+tile_images = {
+    'sand': load_image('sand.png'),
+    'water': load_image('ocean.png'),
+    'rock': load_image('rock.png', -1),
+    'branch': load_image('branch.png', -1)
+}
+player_image = load_image('hero.png', -1)
+
+tile_width = tile_height = 30
+
+
+# функция завершения работы программы
+def terminate():
+    pygame.quit()
+    sys.exit()
+
+
+def load_level(filename):
+    filename = "data/" + filename
+    # читаем уровень, убирая символы перевода строки
+    with open(filename, 'r') as mapFile:
+        level_map = [line.strip() for line in mapFile]
+
+    # и подсчитываем максимальную длину
+    max_width = max(map(len, level_map))
+
+    # дополняем каждую строку пустыми клетками ('.')
+    return list(map(lambda x: x.ljust(max_width, '.'), level_map))
+
+
+player = None
+
+# группы спрайтов
+all_sprites = pygame.sprite.Group()
+tiles_group = pygame.sprite.Group()
+player_group = pygame.sprite.Group()
+object_group = pygame.sprite.Group() # здесь хранятся объекты, с которыми можно будет взаимдейстовать
+
+def generate_level(level):
+    new_player, x, y = None, None, None
+    for y in range(len(level)):
+        for x in range(len(level[y])):
+            if level[y][x] == '#':
+                Tile('water', x, y)
+            elif level[y][x] == '.':
+                Tile('sand', x, y)
+            elif level[y][x] == 'r':
+                Object('rock', x, y)
+                Tile('sand', x, y)
+            elif level[y][x] == 'b':
+                Object('branch', x, y)
+                Tile('sand', x, y)
+            elif level[y][x] == '@':
+                Tile('sand', x, y)
+                new_player = Player(x, y)
+    # вернем игрока, а также размер поля в клетках
+    return new_player, x, y
+
+
+def start_game():
+    player, level_x, level_y = generate_level(load_level('map.txt'))
+    camera = Camera()
+    while True:
+        """Тут будет обработка нажатий клавиш, уже есть движение"""
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_w:
+                    player.pos_y -= 1
+                elif event.key == pygame.K_s:
+                    player.pos_y += 1
+                elif event.key == pygame.K_a:
+                    player.pos_x -= 1
+                elif event.key == pygame.K_d:
+                    player.pos_x += 1
+        screen.fill((0, 0, 0))
+        player_group.update()
+        all_sprites.draw(screen)
+        player_group.draw(screen)
+        object_group.draw(screen)
+        # camera.update(player)
+        # for sprite in all_sprites:
+        #     camera.apply(sprite)
+        pygame.display.flip()
+
+
+class Camera:
+    # зададим начальный сдвиг камеры
+    def __init__(self):
+        self.dx = 0
+        self.dy = 0
+
+    # сдвинуть объект obj на смещение камеры
+    def apply(self, obj):
+        obj.rect.x += self.dx
+        obj.rect.y += self.dy
+
+    # позиционировать камеру на объекте target
+    def update(self, target):
+        self.dx = -(target.rect.x + target.rect.w // 2 - SCREEN_WIDTH // 2)
+        self.dy = -(target.rect.y + target.rect.h // 2 - SCREEN_HEIGHT // 2)
+
+
+class Tile(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y):
+        super().__init__(tiles_group, all_sprites)
+        self.image = tile_images[tile_type]
+        self.rect = self.image.get_rect().move(
+            tile_width * pos_x, tile_height * pos_y)
+
+
+class Object(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y):
+        super().__init__(object_group, all_sprites)
+        self.image = tile_images[tile_type]
+        self.rect = self.image.get_rect().move(
+            tile_width * pos_x, tile_height * pos_y)
+
+
+class Player(pygame.sprite.Sprite):
+    def __init__(self, pos_x, pos_y):
+        super().__init__(player_group, all_sprites)
+        self.image = player_image
+        self.rect = self.image.get_rect().move(
+            tile_width * pos_x + 15, tile_height * pos_y + 5)
+        self.pos_x = pos_x
+        self.pos_y = pos_y
+
+    def update(self):
+        self.rect = self.image.get_rect().move(
+            tile_width * self.pos_x + 15, tile_height * self.pos_y + 5)
+
+# функция загрузки изображений
 
 # материнский класс для кнопок в главном меню (и кнопка "Новая игра")
 class NewGameTablet(pygame.sprite.Sprite):
@@ -393,12 +521,13 @@ class YesNewGameButton(pygame.sprite.Sprite):
                 click_sound.play()
                 new_game_yesno_sprites.empty()
                 screen.blit(background_picture, (0, 0))
-
-                text = ["Пока не готово"]
-                print_text(text, 48, (10, SCREEN_HEIGHT // 2), "#251733", 40)
-
-                backbutton_sprite.add(BackButton())
-                backbutton_sprite.draw(screen)
+                start_game()
+                """С этого начинается переход в функцию начала игры"""
+                # text = ["Пока не готово"]
+                # print_text(text, 48, (10, SCREEN_HEIGHT // 2), "#251733", 40)
+                #
+                # backbutton_sprite.add(BackButton())
+                # backbutton_sprite.draw(screen)
 
 
 class NoNewGameButton(pygame.sprite.Sprite):
@@ -540,7 +669,7 @@ if __name__ == '__main__':
     pygame.mixer.music.play(loops=-1)
 
     click_sound = pygame.mixer.Sound('data/click_sound.mp3')
-
+    # start_game()
     while True:
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
