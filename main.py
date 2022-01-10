@@ -41,7 +41,7 @@ tile_images = {
 }
 player_image = load_image('hero.png', -1)
 
-tile_width = tile_height = 30
+tile_width = tile_height = 50
 
 
 # функция завершения работы программы
@@ -64,12 +64,15 @@ def load_level(filename):
 
 
 player = None
+map_list = load_level('map.txt')
+map_list = [list(i) for i in map_list]
 
 # группы спрайтов
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
-object_group = pygame.sprite.Group() # здесь хранятся объекты, с которыми можно будет взаимдейстовать
+object_group_not_special = pygame.sprite.Group()
+object_group = pygame.sprite.Group()# здесь хранятся объекты, с которыми можно будет взаимдейстовать
 
 def generate_level(level):
     new_player, x, y = None, None, None
@@ -80,10 +83,10 @@ def generate_level(level):
             elif level[y][x] == '.':
                 Tile('sand', x, y)
             elif level[y][x] == 'r':
-                Object('rock', x, y)
+                ObjectNotSpecial('rock', x, y)
                 Tile('sand', x, y)
             elif level[y][x] == 'b':
-                Object('branch', x, y)
+                ObjectNotSpecial('branch', x, y)
                 Tile('sand', x, y)
             elif level[y][x] == '@':
                 Tile('sand', x, y)
@@ -95,6 +98,7 @@ def generate_level(level):
 def start_game():
     player, level_x, level_y = generate_level(load_level('map.txt'))
     camera = Camera()
+    object_group_not_special.update(player.pos_x, player.pos_y)
     while True:
         """Тут будет обработка нажатий клавиш, уже есть движение"""
         for event in pygame.event.get():
@@ -102,21 +106,28 @@ def start_game():
                 terminate()
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_w:
-                    player.pos_y -= 1
+                    if map_list[player.pos_y - 1][player.pos_x] != '#':
+                        player.pos_y -= 1
                 elif event.key == pygame.K_s:
-                    player.pos_y += 1
+                    if map_list[player.pos_y + 1][player.pos_x] != '#':
+                        player.pos_y += 1
                 elif event.key == pygame.K_a:
-                    player.pos_x -= 1
+                    if map_list[player.pos_y][player.pos_x - 1] != '#':
+                        player.pos_x -= 1
                 elif event.key == pygame.K_d:
-                    player.pos_x += 1
+                    if map_list[player.pos_y][player.pos_x + 1] != '#':
+                        player.pos_x += 1
+                if event.key == pygame.K_SPACE:
+                    object_group_not_special.update(player.pos_x, player.pos_y)
+
         screen.fill((0, 0, 0))
         player_group.update()
         all_sprites.draw(screen)
-        player_group.draw(screen)
         object_group.draw(screen)
         # camera.update(player)
         # for sprite in all_sprites:
         #     camera.apply(sprite)
+        player_group.draw(screen)
         pygame.display.flip()
 
 
@@ -145,13 +156,20 @@ class Tile(pygame.sprite.Sprite):
             tile_width * pos_x, tile_height * pos_y)
 
 
-class Object(pygame.sprite.Sprite):
+class ObjectNotSpecial(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
-        super().__init__(object_group, all_sprites)
+        super().__init__(object_group_not_special,object_group, all_sprites)
         self.image = tile_images[tile_type]
+        self.pos_x = pos_x
+        self.pos_y = pos_y
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
 
+    def update(self, *args):
+        if self.pos_x == args[0] and self.pos_y == args[1]:
+            print(1)
+            map_list[self.pos_y][self.pos_x] = '.'
+            self.kill()
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
@@ -164,7 +182,7 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
         self.rect = self.image.get_rect().move(
-            tile_width * self.pos_x + 15, tile_height * self.pos_y + 5)
+            tile_width * self.pos_x, tile_height * self.pos_y - 5)
 
 # функция загрузки изображений
 
@@ -669,7 +687,7 @@ if __name__ == '__main__':
     pygame.mixer.music.play(loops=-1)
 
     click_sound = pygame.mixer.Sound('data/click_sound.mp3')
-    # start_game()
+    start_game()
     while True:
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
