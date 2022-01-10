@@ -16,6 +16,14 @@ pygame.display.set_caption("Island")
 screen = pygame.display.set_mode(SCREENSIZE)
 
 
+def draw_num(screen, num):
+    font = pygame.font.Font(None, 45)
+    text = font.render(num, True, (255, 255, 255))
+    text_x = 72 - text.get_width()
+    text_y = 72 - text.get_height()
+    screen.blit(text, (text_x, text_y))
+
+
 def load_image(name, color_key=None):
     fullname = os.path.join('data', name)
     try:
@@ -72,7 +80,10 @@ all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 object_group_not_special = pygame.sprite.Group()
-object_group = pygame.sprite.Group()# здесь хранятся объекты, с которыми можно будет взаимдейстовать
+interface_group = pygame.sprite.Group()
+list_of_item_group = pygame.sprite.Group()
+list_of_item = list()
+object_group = pygame.sprite.Group() # здесь хранятся объекты, с которыми можно будет взаимдейстовать
 
 def generate_level(level):
     new_player, x, y = None, None, None
@@ -98,7 +109,7 @@ def generate_level(level):
 def start_game():
     player, level_x, level_y = generate_level(load_level('map.txt'))
     camera = Camera()
-    object_group_not_special.update(player.pos_x, player.pos_y)
+    inventory = Inventory()
     while True:
         """Тут будет обработка нажатий клавиш, уже есть движение"""
         for event in pygame.event.get():
@@ -119,15 +130,14 @@ def start_game():
                         player.pos_x += 1
                 if event.key == pygame.K_SPACE:
                     object_group_not_special.update(player.pos_x, player.pos_y)
-
+                    print(list_of_item)
         screen.fill((0, 0, 0))
         player_group.update()
         all_sprites.draw(screen)
         object_group.draw(screen)
-        # camera.update(player)
-        # for sprite in all_sprites:
-        #     camera.apply(sprite)
         player_group.draw(screen)
+        interface_group.draw(screen)
+        list_of_item_group.draw(screen)
         pygame.display.flip()
 
 
@@ -148,6 +158,39 @@ class Camera:
         self.dy = -(target.rect.y + target.rect.h // 2 - SCREEN_HEIGHT // 2)
 
 
+class Inventory(pygame.sprite.Sprite):
+    image = load_image('inventory.png', -1)
+
+    def __init__(self):
+        super().__init__(interface_group)
+        self.image = Inventory.image
+        self.image = pygame.transform.scale(self.image, (SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.rect = self.image.get_rect()
+
+
+class InventoryItem(pygame.sprite.Sprite):
+    def __init__(self, tile_type):
+        super().__init__(list_of_item_group)
+        self.image = tile_images[tile_type]
+        self.tile_type = tile_type
+        self.image = pygame.transform.scale(self.image, (72, 72))
+        self.num = 1
+        draw_num(self.image, str(self.num))
+        self.rect = self.image.get_rect().move(
+            186 + 130 * len(list_of_item), 1000)
+
+    def update(self, fl, tile_type, num):
+        if fl == 'add':
+            if self.tile_type == tile_type:
+                self.image = tile_images[tile_type]
+                self.image = pygame.transform.scale(self.image, (72, 72))
+                self.rect = self.image.get_rect().move(
+                    186 + 130 * list_of_item.index(tile_type), 1000)
+                self.num += num
+                draw_num(self.image, str(self.num))
+
+
+
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_group, all_sprites)
@@ -160,6 +203,7 @@ class ObjectNotSpecial(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(object_group_not_special,object_group, all_sprites)
         self.image = tile_images[tile_type]
+        self.tile_type = tile_type
         self.pos_x = pos_x
         self.pos_y = pos_y
         self.rect = self.image.get_rect().move(
@@ -167,8 +211,12 @@ class ObjectNotSpecial(pygame.sprite.Sprite):
 
     def update(self, *args):
         if self.pos_x == args[0] and self.pos_y == args[1]:
-            print(1)
             map_list[self.pos_y][self.pos_x] = '.'
+            if self.tile_type in list_of_item:
+                list_of_item_group.update('add', self.tile_type, 1)
+            else:
+                InventoryItem(self.tile_type)
+                list_of_item.append(self.tile_type)
             self.kill()
 
 class Player(pygame.sprite.Sprite):
