@@ -18,7 +18,7 @@ pygame.display.set_caption("Island")
 screen = pygame.display.set_mode(SCREENSIZE)
 
 
-def draw_num(screen, num):
+def draw_num(screen, num): # функция, чтоб показать увеличение предметов думаю, можно потом заменить
     font = pygame.font.Font(None, 45)
     text = font.render(num, True, (255, 255, 255))
     text_x = 72 - text.get_width()
@@ -79,13 +79,13 @@ map_list = [list(i) for i in map_list]
 
 # группы спрайтов
 all_sprites = pygame.sprite.Group()
-tiles_group = pygame.sprite.Group()
-player_group = pygame.sprite.Group()
-object_group_not_special = pygame.sprite.Group()
-interface_group = pygame.sprite.Group()
-list_of_item_group = pygame.sprite.Group()
-list_of_item = list()
-list_of_item_num = list()
+tiles_group = pygame.sprite.Group() # группа для песка и воды
+player_group = pygame.sprite.Group() # игрок
+object_group_not_special = pygame.sprite.Group() # объекты для которых не нужен предмет
+interface_group = pygame.sprite.Group() # чтоб было удобнее группа интерфейсов
+list_of_item_group = pygame.sprite.Group() # группа отвечающая за инвентарь
+list_of_item = list() # список всех предметов в инвентаря
+list_of_item_num = list() # количество предметов в инвентаре больше нужно для загрзки
 object_group = pygame.sprite.Group() # здесь хранятся объекты, с которыми можно будет взаимдейстовать
 
 def generate_level(level):
@@ -109,14 +109,14 @@ def generate_level(level):
     return new_player, x, y
 
 
-def load_game(num):
+def load_game(num): # загрузка сейвоф из бд
     global list_of_item, list_of_item_num
     con = sqlite3.connect('saves/saves.db')
     cur = con.cursor()
     content = cur.execute(f"""SELECT * from saves
     WHERE id = {num}""").fetchall()
     map_name = content[0][1] + '.txt'
-    list_of_item = content[0][2]
+    list_of_item = content[0][2] # если нет предметов, то и мысла дальше нет
     if list_of_item:
         list_of_item = [i for i in list_of_item.split(';')]
         list_of_item_num = content[0][3]
@@ -143,7 +143,7 @@ def save_game():
         return
     now = dt.datetime.now()
     dt_string = now.strftime("%d/%m/%Y %H:%M")
-    with open(f'saves/map_save{num}.txt', 'w', encoding='utf-8') as file:
+    with open(f'saves/map_save{num}.txt', 'w', encoding='utf-8') as file: # нужно для переписывания карты
         for i in range(len(map_list)):
             for j in map_list[i]:
                 file.write(j)
@@ -162,7 +162,7 @@ def save_game():
 def start_game(map_name):
     player, level_x, level_y = generate_level(load_level(map_name))
     start_x, start_y = player.pos_x, player.pos_y
-    camera = Camera()
+    camera = Camera() # нужно сделать
     Inventory()
     while True:
         """Тут будет обработка нажатий клавиш, уже есть движение"""
@@ -184,7 +184,7 @@ def start_game(map_name):
                         player.pos_x += 1
                 if event.key == pygame.K_SPACE:
                     object_group_not_special.update(player.pos_x, player.pos_y)
-                if event.key == pygame.K_9:
+                if event.key == pygame.K_9: # кнопка сохранения
                     map_list[start_y][start_x] = '.'
                     map_list[player.pos_y][player.pos_x] = '@'
                     save_game()
@@ -215,7 +215,7 @@ class Camera:
         self.dy = -(target.rect.y + target.rect.h // 2 - SCREEN_HEIGHT // 2)
 
 
-class Inventory(pygame.sprite.Sprite):
+class Inventory(pygame.sprite.Sprite): # класс инвентаря( нижней полоски)
     image = load_image('inventory.png', -1)
 
     def __init__(self):
@@ -225,7 +225,7 @@ class Inventory(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
 
-class InventoryItem(pygame.sprite.Sprite):
+class InventoryItem(pygame.sprite.Sprite): # предметы в инвентаре
     def __init__(self, tile_type):
         super().__init__(list_of_item_group)
         self.image = tile_images[tile_type]
@@ -268,7 +268,7 @@ class ObjectNotSpecial(pygame.sprite.Sprite):
     def update(self, *args):
         if self.pos_x == args[0] and self.pos_y == args[1]:
             map_list[self.pos_y][self.pos_x] = '.'
-            if self.tile_type in list_of_item:
+            if self.tile_type in list_of_item: # добавление предмета идёт с проверкой есть ли он в списке
                 list_of_item_group.update('add', self.tile_type, 1)
                 list_of_item_num[list_of_item.index(self.tile_type)] += 1
             else:
@@ -289,8 +289,6 @@ class Player(pygame.sprite.Sprite):
     def update(self):
         self.rect = self.image.get_rect().move(
             tile_width * self.pos_x, tile_height * self.pos_y - 5)
-
-# функция загрузки изображений
 
 # материнский класс для кнопок в главном меню (и кнопка "Новая игра")
 class NewGameTablet(pygame.sprite.Sprite):
