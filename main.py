@@ -3,6 +3,8 @@ import ctypes
 import sys
 import os
 import time
+import sqlite3
+import datetime as dt
 
 # получаем размер монитора и вводим константы
 user32 = ctypes.windll.user32
@@ -59,7 +61,7 @@ def terminate():
 
 
 def load_level(filename):
-    filename = "data/" + filename
+    filename = "saves/" + filename
     # читаем уровень, убирая символы перевода строки
     with open(filename, 'r') as mapFile:
         level_map = [line.strip() for line in mapFile]
@@ -67,8 +69,8 @@ def load_level(filename):
     # и подсчитываем максимальную длину
     max_width = max(map(len, level_map))
 
-    # дополняем каждую строку пустыми клетками ('.')
-    return list(map(lambda x: x.ljust(max_width, '.'), level_map))
+    # дополняем каждую строку пустыми клетками ('#')
+    return list(map(lambda x: x.ljust(max_width, '#'), level_map))
 
 
 player = None
@@ -83,6 +85,7 @@ object_group_not_special = pygame.sprite.Group()
 interface_group = pygame.sprite.Group()
 list_of_item_group = pygame.sprite.Group()
 list_of_item = list()
+list_of_item_num = list()
 object_group = pygame.sprite.Group() # здесь хранятся объекты, с которыми можно будет взаимдейстовать
 
 def generate_level(level):
@@ -106,10 +109,61 @@ def generate_level(level):
     return new_player, x, y
 
 
-def start_game():
-    player, level_x, level_y = generate_level(load_level('map.txt'))
+def load_game(num):
+    global list_of_item, list_of_item_num
+    con = sqlite3.connect('saves/saves.db')
+    cur = con.cursor()
+    content = cur.execute(f"""SELECT * from saves
+    WHERE id = {num}""").fetchall()
+    map_name = content[0][1] + '.txt'
+    list_of_item = content[0][2]
+    if list_of_item:
+        list_of_item = [i for i in list_of_item.split(';')]
+        list_of_item_num = content[0][3]
+        list_of_item_num = [int(i) for i in list_of_item_num.split(';')]
+        for i in range(len(list_of_item)):
+            sup = InventoryItem(list_of_item[i])
+            sup.num = list_of_item_num[i]
+            sup.update('add', list_of_item[i], 0)
+    con.close()
+    start_game(map_name)
+
+
+def save_game():
+    con = sqlite3.connect('saves/saves.db')
+    cur = con.cursor()
+    num = cur.execute(f"""SELECT id FROM saves""").fetchall()
+    if not num:
+        num = 1
+    else:
+        num = num[-1][0] + 1
+    if num > 5:
+        con.close()
+        print('nado dobavit uvedomlenie')
+        return
+    now = dt.datetime.now()
+    dt_string = now.strftime("%d/%m/%Y %H:%M")
+    with open(f'saves/map_save{num}.txt', 'w', encoding='utf-8') as file:
+        for i in range(len(map_list)):
+            for j in map_list[i]:
+                file.write(j)
+            if i != len(map_list) - 1:
+                file.write('\n')
+        file.close()
+    inventory = ';'.join(i for i in list_of_item)
+    num_of_things = ';'.join(str(i) for i in list_of_item_num)
+    cur.execute(f"""INSERT INTO saves VALUES(?, ?, ?, ?, ?)""",
+                (num, f'map_save{num}', inventory, num_of_things, dt_string)).fetchall()
+    con.commit()
+    con.close()
+
+
+
+def start_game(map_name):
+    player, level_x, level_y = generate_level(load_level(map_name))
+    start_x, start_y = player.pos_x, player.pos_y
     camera = Camera()
-    inventory = Inventory()
+    Inventory()
     while True:
         """Тут будет обработка нажатий клавиш, уже есть движение"""
         for event in pygame.event.get():
@@ -119,18 +173,21 @@ def start_game():
                 if event.key == pygame.K_w:
                     if map_list[player.pos_y - 1][player.pos_x] != '#':
                         player.pos_y -= 1
-                elif event.key == pygame.K_s:
+                if event.key == pygame.K_s:
                     if map_list[player.pos_y + 1][player.pos_x] != '#':
                         player.pos_y += 1
-                elif event.key == pygame.K_a:
+                if event.key == pygame.K_a:
                     if map_list[player.pos_y][player.pos_x - 1] != '#':
                         player.pos_x -= 1
-                elif event.key == pygame.K_d:
+                if event.key == pygame.K_d:
                     if map_list[player.pos_y][player.pos_x + 1] != '#':
                         player.pos_x += 1
                 if event.key == pygame.K_SPACE:
                     object_group_not_special.update(player.pos_x, player.pos_y)
-                    print(list_of_item)
+                if event.key == pygame.K_9:
+                    map_list[start_y][start_x] = '.'
+                    map_list[player.pos_y][player.pos_x] = '@'
+                    save_game()
         screen.fill((0, 0, 0))
         player_group.update()
         all_sprites.draw(screen)
@@ -190,7 +247,6 @@ class InventoryItem(pygame.sprite.Sprite):
                 draw_num(self.image, str(self.num))
 
 
-
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_group, all_sprites)
@@ -214,9 +270,11 @@ class ObjectNotSpecial(pygame.sprite.Sprite):
             map_list[self.pos_y][self.pos_x] = '.'
             if self.tile_type in list_of_item:
                 list_of_item_group.update('add', self.tile_type, 1)
+                list_of_item_num[list_of_item.index(self.tile_type)] += 1
             else:
                 InventoryItem(self.tile_type)
                 list_of_item.append(self.tile_type)
+                list_of_item_num.append(1)
             self.kill()
 
 class Player(pygame.sprite.Sprite):
@@ -374,12 +432,12 @@ class LoadTablet(NewGameTablet):
                 click_sound.play()
                 tablet_sprites.empty()
                 screen.blit(background_picture, (0, 0))
-
-                text = ["Пока не готово"]
-                print_text(text, 48, (10, SCREEN_HEIGHT // 2), "#251733")
-
-                backbutton_sprite.add(BackButton())
-                backbutton_sprite.draw(screen)
+                load_game(2)
+                # text = ["Пока не готово"]
+                # print_text(text, 48, (10, SCREEN_HEIGHT // 2), "#251733")
+                #
+                # backbutton_sprite.add(BackButton())
+                # backbutton_sprite.draw(screen)
 
 
 class SettingsTablet(NewGameTablet):
@@ -587,7 +645,7 @@ class YesNewGameButton(pygame.sprite.Sprite):
                 click_sound.play()
                 new_game_yesno_sprites.empty()
                 screen.blit(background_picture, (0, 0))
-                start_game()
+                start_game('map.txt')
                 """С этого начинается переход в функцию начала игры"""
                 # text = ["Пока не готово"]
                 # print_text(text, 48, (10, SCREEN_HEIGHT // 2), "#251733", 40)
@@ -735,7 +793,7 @@ if __name__ == '__main__':
     pygame.mixer.music.play(loops=-1)
 
     click_sound = pygame.mixer.Sound('data/click_sound.mp3')
-    start_game()
+    # load_game(2)
     while True:
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
