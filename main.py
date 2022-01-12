@@ -158,13 +158,14 @@ def save_game():
     inventory = ';'.join(i for i in list_of_item)
     num_of_things = ';'.join(str(i) for i in list_of_item_num)
     cur.execute(f"""INSERT INTO saves VALUES(?, ?, ?, ?, ?, ?, ?)""",
-                (num, f'map_save{num}', inventory, num_of_things, stats.hp, stats.hunger, dt_string)).fetchall()
+                (num, f'map_save{num}', inventory, num_of_things, hp, hunger, dt_string)).fetchall()
     con.commit()
     con.close()
 
 
 
 def start_game(map_name):
+    global list_of_item, list_of_item_num, hp, hunger
     player, level_x, level_y = generate_level(load_level(map_name))
     start_x, start_y = player.pos_x, player.pos_y
     camera = Camera() # нужно сделать
@@ -199,6 +200,8 @@ def start_game(map_name):
                 if event.key == pygame.K_SPACE:
                     object_group_not_special.update(player.pos_x, player.pos_y)
                 if event.key == pygame.K_9: # кнопка сохранения
+                    hp = stats.hp
+                    hunger = stats.hunger
                     map_list[start_y][start_x] = '.'
                     map_list[player.pos_y][player.pos_x] = '@'
                     save_game()
@@ -425,7 +428,7 @@ class ContinueTablet(NewGameTablet):
                 if not num:
                     start_game('map.txt')
                 else:
-                    num = num[0][-1]
+                    num = num[-1][0]
                     load_game(num)
 
 
