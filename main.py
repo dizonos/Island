@@ -87,6 +87,8 @@ interface_group = pygame.sprite.Group() # чтоб было удобнее гр�
 list_of_item_group = pygame.sprite.Group() # группа отвечающая за инвентарь
 list_of_item = list() # список всех предметов в инвентаря
 list_of_item_num = list() # количество предметов в инвентаре больше нужно для загрзки
+hp = 100
+hunger = 100
 object_group = pygame.sprite.Group() # здесь хранятся объекты, с которыми можно будет взаимдейстовать
 
 def generate_level(level):
@@ -111,13 +113,15 @@ def generate_level(level):
 
 
 def load_game(num): # загрузка сейвоф из бд
-    global list_of_item, list_of_item_num
+    global list_of_item, list_of_item_num, hp, hunger
     con = sqlite3.connect('saves/saves.db')
     cur = con.cursor()
     content = cur.execute(f"""SELECT * from saves
     WHERE id = {num}""").fetchall()
     map_name = content[0][1] + '.txt'
     list_of_item = content[0][2] # если нет предметов, то и мысла дальше нет
+    hp = content[0][4]
+    hunger = content[0][5]
     if list_of_item:
         list_of_item = [i for i in list_of_item.split(';')]
         list_of_item_num = content[0][3]
@@ -153,8 +157,8 @@ def save_game():
         file.close()
     inventory = ';'.join(i for i in list_of_item)
     num_of_things = ';'.join(str(i) for i in list_of_item_num)
-    cur.execute(f"""INSERT INTO saves VALUES(?, ?, ?, ?, ?)""",
-                (num, f'map_save{num}', inventory, num_of_things, dt_string)).fetchall()
+    cur.execute(f"""INSERT INTO saves VALUES(?, ?, ?, ?, ?, ?, ?)""",
+                (num, f'map_save{num}', inventory, num_of_things, stats.hp, stats.hunger, dt_string)).fetchall()
     con.commit()
     con.close()
 
@@ -166,6 +170,9 @@ def start_game(map_name):
     camera = Camera() # нужно сделать
     Inventory()
     stats = Stats()
+    stats.hp = hp
+    stats.hunger = hunger
+    stats.update(0)
     pygame.time.set_timer(HUNGER_EVENT, 7000)
     while True:
         """Тут будет обработка нажатий клавиш, уже есть движение"""
@@ -175,6 +182,8 @@ def start_game(map_name):
             if event.type == HUNGER_EVENT:
                 stats.update(-1)
             if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    terminate()
                 if event.key == pygame.K_w:
                     if map_list[player.pos_y - 1][player.pos_x] != '#':
                         player.pos_y -= 1
@@ -410,12 +419,14 @@ class ContinueTablet(NewGameTablet):
                 click_sound.play()
                 tablet_sprites.empty()
                 screen.blit(background_picture, (0, 0))
-
-                text = ["Эта кнопка должна загружать последнее сохранение"]
-                print_text(text, 48, (10, SCREEN_HEIGHT // 2), "#251733")
-
-                backbutton_sprite.add(BackButton())
-                backbutton_sprite.draw(screen)
+                con = sqlite3.connect('saves/saves.db')
+                cur = con.cursor()
+                num = cur.execute("""SELECT id FROM saves""").fetchall()
+                if not num:
+                    start_game('map.txt')
+                else:
+                    num = num[0][-1]
+                    load_game(num)
 
 
 class ExitTablet(NewGameTablet):
@@ -829,7 +840,7 @@ if __name__ == '__main__':
     pygame.mixer.music.play(loops=-1)
 
     click_sound = pygame.mixer.Sound('data/click_sound.mp3')
-    start_game('map.txt')
+    # start_game('map.txt')
     while True:
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
