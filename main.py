@@ -16,13 +16,14 @@ pygame.display.set_caption("Island")
 
 # если не произвести иниц. дисплея здесь, перестанет работать load_image()
 screen = pygame.display.set_mode(SCREENSIZE)
+HUNGER_EVENT= pygame.USEREVENT + 1
 
 
-def draw_num(screen, num): # функция, чтоб показать увеличение предметов думаю, можно потом заменить
-    font = pygame.font.Font(None, 45)
-    text = font.render(num, True, (255, 255, 255))
-    text_x = 72 - text.get_width()
-    text_y = 72 - text.get_height()
+def draw_num(screen, num, x, y, color, font_size): # функция, чтоб показать увеличение предметов думаю, можно потом заменить
+    font = pygame.font.Font(None, font_size)
+    text = font.render(num, True, color)
+    text_x = x - text.get_width()
+    text_y = y - text.get_height()
     screen.blit(text, (text_x, text_y))
 
 
@@ -164,11 +165,15 @@ def start_game(map_name):
     start_x, start_y = player.pos_x, player.pos_y
     camera = Camera() # нужно сделать
     Inventory()
+    stats = Stats()
+    pygame.time.set_timer(HUNGER_EVENT, 7000)
     while True:
         """Тут будет обработка нажатий клавиш, уже есть движение"""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
+            if event.type == HUNGER_EVENT:
+                stats.update(-1)
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_w:
                     if map_list[player.pos_y - 1][player.pos_x] != '#':
@@ -215,6 +220,39 @@ class Camera:
         self.dy = -(target.rect.y + target.rect.h // 2 - SCREEN_HEIGHT // 2)
 
 
+class Stats(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(interface_group)
+        self.image = load_image('stat.png', -1)
+        self.hp = 1
+        self.hunger = 1
+        draw_num(self.image, str(self.hp), 1673, 160, pygame.Color('white'), 35)
+        draw_num(self.image, str(self.hunger), 1823, 160, pygame.Color('white'), 35)
+        self.rect = self.image.get_rect()
+
+    def update(self, num):
+        self.image = load_image('stat.png', -1)
+        self.hunger += num
+        if self.hunger > 100:
+            self.hp += self.hunger - 100
+            if self.hp > 100:
+                self.hp = 100
+        elif self.hunger < 0:
+            self.hp += self.hunger
+            self.hunger = 0
+            if self.hp <= 0:
+                terminate()
+        if self.hp <= 25:
+            draw_num(self.image, str(self.hp), 1673, 160, pygame.Color('red'), 35)
+        else:
+            draw_num(self.image, str(self.hp), 1673, 160, pygame.Color('white'), 35)
+        if self.hunger <= 25:
+            draw_num(self.image, str(self.hunger), 1823, 160, pygame.Color('red'), 35)
+        else:
+            draw_num(self.image, str(self.hunger), 1823, 160, pygame.Color('white'), 35)
+        self.rect = self.image.get_rect()
+
+
 class Inventory(pygame.sprite.Sprite): # класс инвентаря( нижней полоски)
     image = load_image('inventory.png', -1)
 
@@ -232,7 +270,7 @@ class InventoryItem(pygame.sprite.Sprite): # предметы в инвента�
         self.tile_type = tile_type
         self.image = pygame.transform.scale(self.image, (72, 72))
         self.num = 1
-        draw_num(self.image, str(self.num))
+        draw_num(self.image, str(self.num), 72, 72, pygame.Color('white'), 40)
         self.rect = self.image.get_rect().move(
             186 + 130 * len(list_of_item), 1000)
 
@@ -244,7 +282,7 @@ class InventoryItem(pygame.sprite.Sprite): # предметы в инвента�
                 self.rect = self.image.get_rect().move(
                     186 + 130 * list_of_item.index(tile_type), 1000)
                 self.num += num
-                draw_num(self.image, str(self.num))
+                draw_num(self.image, str(self.num), 72, 72, pygame.Color('white'), 40)
 
 
 class Tile(pygame.sprite.Sprite):
@@ -791,7 +829,7 @@ if __name__ == '__main__':
     pygame.mixer.music.play(loops=-1)
 
     click_sound = pygame.mixer.Sound('data/click_sound.mp3')
-    # load_game(2)
+    start_game('map.txt')
     while True:
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
