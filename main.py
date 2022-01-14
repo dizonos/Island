@@ -110,23 +110,21 @@ def generate_level(level):
 
 
 def load_game(num): # загрузка сейвоф из бд
-    global list_of_item, list_of_item_num, hp, hunger
+    global list_of_item, hp, hunger
     con = sqlite3.connect('saves/saves.db')
     cur = con.cursor()
     content = cur.execute(f"""SELECT * from saves
     WHERE id = {num}""").fetchall()
     map_name = content[0][1] + '.txt'
-    list_of_item = content[0][2] # если нет предметов, то и мысла дальше нет
+    list_of_item1 = content[0][2] # если нет предметов, то и мысла дальше нет
     hp = content[0][4]
     hunger = content[0][5]
-    if list_of_item:
-        list_of_item = [i for i in list_of_item.split(';')]
+    if list_of_item1:
+        list_of_item1 = [i for i in list_of_item1.split(';')]
         list_of_item_num = content[0][3]
         list_of_item_num = [int(i) for i in list_of_item_num.split(';')]
-        for i in range(len(list_of_item)):
-            sup = InventoryItem(list_of_item[i])
-            sup.num = list_of_item_num[i]
-            sup.update('add', list_of_item[i], 0)
+        for i in range(len(list_of_item1)):
+            list_of_item[list_of_item1[i]] = list_of_item_num[i]
     con.close()
     start_game(map_name)
 
@@ -152,8 +150,8 @@ def save_game():
             if i != len(map_list) - 1:
                 file.write('\n')
         file.close()
-    inventory = ';'.join(i for i in list_of_item)
-    num_of_things = ';'.join(str(i) for i in list_of_item_num)
+    inventory = ';'.join(i for i in list_of_item.keys())
+    num_of_things = ';'.join(str(i) for i in list_of_item.values())
     cur.execute(f"""INSERT INTO saves VALUES(?, ?, ?, ?, ?, ?, ?)""",
                 (num, f'map_save{num}', inventory, num_of_things, hp, hunger, dt_string)).fetchall()
     con.commit()
@@ -254,13 +252,14 @@ class Stats(pygame.sprite.Sprite):
             if self.hp <= 0:
                 terminate()
         if self.hp <= 25:
-            draw_num(self.image, str(self.hp), 1673, 160, 35, pygame.Color('red'))
+            draw_num(self.image, str(self.hp), 1639, 140, 35, pygame.Color('red'))
         else:
-            draw_num(self.image, str(self.hp), 1673, 160, 35)
+            draw_num(self.image, str(self.hp), 1639, 140, 35)
         if self.hunger <= 25:
-            draw_num(self.image, str(self.hunger), 1823, 160, 35, pygame.Color('red'))
+            draw_num(self.image, str(self.hunger), 1789, 140, 35, pygame.Color('red'))
         else:
-            draw_num(self.image, str(self.hunger), 1823, 160, 35)
+            draw_num(self.image, str(self.hunger), 1789, 140, 35)
+        self.image = pygame.transform.scale(self.image, (SCREEN_WIDTH, SCREEN_HEIGHT))
         self.rect = self.image.get_rect()
 
 
@@ -278,13 +277,13 @@ class Inventory(pygame.sprite.Sprite): # класс инвентаря( нижн
         self.inventory = list_of_item
 
     def update(self):
-        self.image = Inventory.image
+        self.image = load_image('inventory.png', -1)
         self.inventory = list_of_item
         n = 0
         for i in self.inventory.keys():
             item_image = load_image(i + '.png', -1)
             draw_num(item_image, str(self.inventory[i]), 35, 35, 25)
-            self.image.blit(item_image, (187 + 50 * n, 1004))
+            self.image.blit(item_image, (255 + 90 * n, 1022))
             n += 1
         self.image = pygame.transform.scale(self.image, (SCREEN_WIDTH, SCREEN_HEIGHT))
         self.rect = self.image.get_rect()
@@ -834,7 +833,7 @@ if __name__ == '__main__':
     pygame.mixer.music.play(loops=-1)
 
     click_sound = pygame.mixer.Sound('data/click_sound.mp3')
-    start_game('map.txt')
+    # start_game('map.txt')
     while True:
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
