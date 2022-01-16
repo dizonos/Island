@@ -85,14 +85,14 @@ def generate_level(level):
     return new_player, x, y
 
 
-def load_game(num):  # загрузка сейвоф из бд
+def load_game(num): # загрузка сейвоф из бд
     global list_of_item, hp, hunger
     con = sqlite3.connect('saves/saves.db')
     cur = con.cursor()
     content = cur.execute(f"""SELECT * from saves
     WHERE id = {num}""").fetchall()
     map_name = content[0][1] + '.txt'
-    list_of_item1 = content[0][2]  # если нет предметов, то и мысла дальше нет
+    list_of_item1 = content[0][2] # если нет предметов, то и мысла дальше нет
     hp = content[0][4]
     hunger = content[0][5]
     if list_of_item1:
@@ -119,8 +119,7 @@ def save_game():
         return
     now = dt.datetime.now()
     dt_string = now.strftime("%d/%m/%Y %H:%M")
-    with open(f'saves/map_save{num}.txt', 'w',
-              encoding='utf-8') as file:  # нужно для переписывания карты
+    with open(f'saves/map_save{num}.txt', 'w', encoding='utf-8') as file: # нужно для переписывания карты
         for i in range(len(map_list)):
             for j in map_list[i]:
                 file.write(j)
@@ -130,10 +129,10 @@ def save_game():
     inventory = ';'.join(i for i in list_of_item.keys())
     num_of_things = ';'.join(str(i) for i in list_of_item.values())
     cur.execute(f"""INSERT INTO saves VALUES(?, ?, ?, ?, ?, ?, ?)""",
-                (num, f'map_save{num}', inventory, num_of_things, hp, hunger,
-                 dt_string)).fetchall()
+                (num, f'map_save{num}', inventory, num_of_things, hp, hunger, dt_string)).fetchall()
     con.commit()
     con.close()
+
 
 
 def start_game(map_name):
@@ -147,7 +146,7 @@ def start_game(map_name):
     list_of_item['branch'] = 1
     inventory_group.update()
 
-    pygame.time.set_timer(HUNGER_EVENT, 100)  # , 7000)
+    pygame.time.set_timer(HUNGER_EVENT, 200)  # , 7000)
     pygame.time.set_timer(WALK_EVENT, 200)
 
     game_is_running = True
@@ -306,7 +305,7 @@ class Stats(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
 
-class Inventory(pygame.sprite.Sprite):  # класс инвентаря( нижней полоски)
+class Inventory(pygame.sprite.Sprite): # класс инвентаря( нижней полоски)
     """ классе инвенторя будут в словаре храниться предметы
     при получении нового предмета просто будет перерисовываться инвентарь
     добавить синхнонизацию по размеру экрана"""
@@ -315,8 +314,7 @@ class Inventory(pygame.sprite.Sprite):  # класс инвентаря( ниж�
     def __init__(self):
         super().__init__(inventory_group)
         self.image = Inventory.image
-        self.image = pygame.transform.scale(self.image,
-                                            (SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.image = pygame.transform.scale(self.image, (SCREEN_WIDTH, SCREEN_HEIGHT))
         self.rect = self.image.get_rect()
         self.inventory = list_of_item
 
@@ -329,8 +327,7 @@ class Inventory(pygame.sprite.Sprite):  # класс инвентаря( ниж�
             draw_num(item_image, str(self.inventory[i]), 35, 35, 25)
             self.image.blit(item_image, (255 + 90 * n, 1022))
             n += 1
-        self.image = pygame.transform.scale(self.image,
-                                            (SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.image = pygame.transform.scale(self.image, (SCREEN_WIDTH, SCREEN_HEIGHT))
         self.rect = self.image.get_rect()
 
 
@@ -344,17 +341,18 @@ class Tile(pygame.sprite.Sprite):
 
 class ObjectNotSpecial(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
-        super().__init__(object_group_not_special, object_group, all_sprites)
+        super().__init__(object_group_not_special,object_group, all_sprites)
         self.image = tile_images[tile_type]
         self.tile_type = tile_type
-        self.pos_x, self.pos_y = pos_x, pos_y
+        self.pos_x = pos_x
+        self.pos_y = pos_y
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
 
     def update(self, *args):
         if self.pos_x == args[0] and self.pos_y == args[1]:
             map_list[self.pos_y][self.pos_x] = '.'
-            if self.tile_type in list_of_item.keys():  # добавление предмета идёт с проверкой есть ли он в списке
+            if self.tile_type in list_of_item.keys(): # добавление предмета идёт с проверкой есть ли он в списке
                 list_of_item[self.tile_type] += 1
             else:
                 list_of_item[self.tile_type] = 1
