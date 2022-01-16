@@ -21,8 +21,7 @@ HUNGER_EVENT = pygame.USEREVENT + 1
 WALK_EVENT = pygame.USEREVENT + 2
 
 
-def draw_num(screen, num, x, y, font_size, color=pygame.Color(
-    'white')):  # функция, чтоб показать увеличение предметов думаю, можно потом заменить
+def draw_num(screen, num, x, y, font_size, color=pygame.Color('white')): # функция, чтоб показать увеличение предметов думаю, можно потом заменить
     font = pygame.font.Font(None, font_size)
     text = font.render(num, True, color)
     screen.blit(text, (x, y))
@@ -85,14 +84,14 @@ def generate_level(level):
     return new_player, x, y
 
 
-def load_game(num):  # загрузка сейвоф из бд
+def load_game(num): # загрузка сейвоф из бд
     global list_of_item, hp, hunger
     con = sqlite3.connect('saves/saves.db')
     cur = con.cursor()
     content = cur.execute(f"""SELECT * from saves
     WHERE id = {num}""").fetchall()
     map_name = content[0][1] + '.txt'
-    list_of_item1 = content[0][2]  # если нет предметов, то и мысла дальше нет
+    list_of_item1 = content[0][2] # если нет предметов, то и мысла дальше нет
     hp = content[0][4]
     hunger = content[0][5]
     if list_of_item1:
@@ -119,8 +118,7 @@ def save_game():
         return
     now = dt.datetime.now()
     dt_string = now.strftime("%d/%m/%Y %H:%M")
-    with open(f'saves/map_save{num}.txt', 'w',
-              encoding='utf-8') as file:  # нужно для переписывания карты
+    with open(f'saves/map_save{num}.txt', 'w', encoding='utf-8') as file: # нужно для переписывания карты
         for i in range(len(map_list)):
             for j in map_list[i]:
                 file.write(j)
@@ -130,8 +128,7 @@ def save_game():
     inventory = ';'.join(i for i in list_of_item.keys())
     num_of_things = ';'.join(str(i) for i in list_of_item.values())
     cur.execute(f"""INSERT INTO saves VALUES(?, ?, ?, ?, ?, ?, ?)""",
-                (num, f'map_save{num}', inventory, num_of_things, hp, hunger,
-                 dt_string)).fetchall()
+                (num, f'map_save{num}', inventory, num_of_things, hp, hunger, dt_string)).fetchall()
     con.commit()
     con.close()
 
@@ -140,7 +137,7 @@ def start_game(map_name):
     global list_of_item, hp, hunger
     player, level_x, level_y = generate_level(load_level(map_name))
     start_x, start_y = player.pos_x, player.pos_y
-    camera = Camera()  # нужно сделать
+    camera = Camera() # нужно сделать
     stats, inventory = Stats(), Inventory()
     stats.hp, stats.hunger = hp, hunger
     stats.update(0)
@@ -292,21 +289,18 @@ class Stats(pygame.sprite.Sprite):
             self.hp += self.hunger
             self.hunger = 0
         if self.hp <= 25:
-            draw_num(self.image, str(self.hp), 1639, 140, 35,
-                     pygame.Color('red'))
+            draw_num(self.image, str(self.hp), 1639, 140, 35, pygame.Color('red'))
         else:
             draw_num(self.image, str(self.hp), 1639, 140, 35)
         if self.hunger <= 25:
-            draw_num(self.image, str(self.hunger), 1789, 140, 35,
-                     pygame.Color('red'))
+            draw_num(self.image, str(self.hunger), 1789, 140, 35, pygame.Color('red'))
         else:
             draw_num(self.image, str(self.hunger), 1789, 140, 35)
-        self.image = pygame.transform.scale(self.image,
-                                            (SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.image = pygame.transform.scale(self.image, (SCREEN_WIDTH, SCREEN_HEIGHT))
         self.rect = self.image.get_rect()
 
 
-class Inventory(pygame.sprite.Sprite):  # класс инвентаря( нижней полоски)
+class Inventory(pygame.sprite.Sprite): # класс инвентаря( нижней полоски)
     """ классе инвенторя будут в словаре храниться предметы
     при получении нового предмета просто будет перерисовываться инвентарь
     добавить синхнонизацию по размеру экрана"""
@@ -315,8 +309,7 @@ class Inventory(pygame.sprite.Sprite):  # класс инвентаря( ниж�
     def __init__(self):
         super().__init__(inventory_group)
         self.image = Inventory.image
-        self.image = pygame.transform.scale(self.image,
-                                            (SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.image = pygame.transform.scale(self.image, (SCREEN_WIDTH, SCREEN_HEIGHT))
         self.rect = self.image.get_rect()
         self.inventory = list_of_item
 
@@ -329,8 +322,7 @@ class Inventory(pygame.sprite.Sprite):  # класс инвентаря( ниж�
             draw_num(item_image, str(self.inventory[i]), 35, 35, 25)
             self.image.blit(item_image, (255 + 90 * n, 1022))
             n += 1
-        self.image = pygame.transform.scale(self.image,
-                                            (SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.image = pygame.transform.scale(self.image, (SCREEN_WIDTH, SCREEN_HEIGHT))
         self.rect = self.image.get_rect()
 
 
@@ -354,7 +346,7 @@ class ObjectNotSpecial(pygame.sprite.Sprite):
     def update(self, *args):
         if self.pos_x == args[0] and self.pos_y == args[1]:
             map_list[self.pos_y][self.pos_x] = '.'
-            if self.tile_type in list_of_item.keys():  # добавление предмета идёт с проверкой есть ли он в списке
+            if self.tile_type in list_of_item.keys(): # добавление предмета идёт с проверкой есть ли он в списке
                 list_of_item[self.tile_type] += 1
             else:
                 list_of_item[self.tile_type] = 1
@@ -400,7 +392,6 @@ class NewGameTablet(pygame.sprite.Sprite):
     """я решила вынести функцию замены картинки при наведении на кнопку в 
     отдельную функцию, чтобы в дочерних классах менялись только строчки про
     картинки и не приходилось перееопределять полностью self.tablet_moving()"""
-
     def is_active(self, boolian=False):
         if boolian:
             self.image = pygame.transform.scale(NewGameTablet.active_image,
@@ -698,9 +689,8 @@ class LoadLastSave(ContinueTablet):
     image = load_image('load_last_save_button.png')
     active_image = load_image('load_last_save_active_button.png')
 
-    def __init__(self, *group):
-        super().__init__(SCREEN_WIDTH // 2 - 255, SCREEN_HEIGHT // 2 + 20,
-                         *group)
+    def __init__(self, * group):
+        super().__init__(SCREEN_WIDTH // 2 - 255, SCREEN_HEIGHT // 2 + 20, *group)
         self.image = pygame.transform.scale(LoadLastSave.image, (250, 70))
 
     def tablet_moving(self, args):
@@ -941,8 +931,7 @@ def main_screen_init():
     tablet_sprites.draw(screen)
 
     # выводим большую надпись ISLAND
-    print_text(["ISLAND"], 200, (SCREEN_WIDTH // 4 + SCREEN_WIDTH // 12, 10),
-               "#ffa97e")
+    print_text(["ISLAND"], 200, (SCREEN_WIDTH // 4 + SCREEN_WIDTH // 12, 10), "#ffa97e")
 
 
 def loading_screen():
@@ -1009,11 +998,11 @@ if __name__ == '__main__':
                 exit_yesno_sprites.update(event)
                 new_game_yesno_sprites.update(event)
                 music_switch_sprite.update(event)
-
+                
             elif event.type == pygame.MOUSEMOTION:
                 tablet_sprites.update(event)
                 backbutton_sprite.update(event)
                 exit_yesno_sprites.update(event)
                 new_game_yesno_sprites.update(event)
-
+                
             pygame.display.flip()
