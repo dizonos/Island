@@ -141,107 +141,125 @@ def start_game(map_name):
     stats, inventory = Stats(), Inventory()
     stats.hp, stats.hunger = hp, hunger
     stats.update(0)
-    list_of_item['branch'] = 1
+    list_of_item = dict()
     inventory_group.update()
 
-    pygame.time.set_timer(HUNGER_EVENT, 80)  # , 7000)
+    pygame.time.set_timer(HUNGER_EVENT, 80)  # 7000)
     pygame.time.set_timer(WALK_EVENT, 200)
 
-    game_is_running = True
     go = False
     die_init_flag = False
-
+    pause_init_flag = False
+    game_is_running = True
     while_is_true = True
-    while while_is_true:
-        """Тут будет обработка нажатий клавиш, уже есть движение"""
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                terminate()
-
-            if event.type == pygame.MOUSEMOTION:
-                die_dialog_sprites.update(event)
-                pause_menu_sprites.update(event)
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                die_dialog_sprites.update(event)
-                pause_menu_sprites.update(event)
-                if die_init_flag and returnto.is_clicked():
-                    while_is_true = False
-
-            if event.type == HUNGER_EVENT:
-                stats.update(-1)
-                if stats.current_hp() <= 0:
-                    game_is_running = False
-                    pygame.time.set_timer(HUNGER_EVENT, 0)
-                    pygame.time.set_timer(WALK_EVENT, 0)
-
-                    all_sprites.empty()
-                    object_group.empty()
-                    player_group.empty()
-                    interface_group.empty()
-                    inventory_group.empty()
-
-                    screen.fill('#4e1818')
-                    lastsave = LoadLastSave(die_dialog_sprites)
-                    returnto = ReturnToMainMenuButton(die_dialog_sprites)
-                    die_init_flag = True
-                    print_text(["Вы погибли".rjust(8, " ")], 72,
-                               (SCREEN_WIDTH // 2 - 255,
-                                SCREEN_HEIGHT // 2 - 50), '#efdfbb')
-                    die_dialog_sprites.draw(screen)
-            if event.type == WALK_EVENT:
-                go = True
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
+    try:
+        while while_is_true:
+            """Тут будет обработка нажатий клавиш, уже есть движение"""
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
                     terminate()
-                if event.key == pygame.K_t:
-                    game_is_running = False
 
-                    all_sprites.empty()
-                    object_group.empty()
-                    player_group.empty()
-                    interface_group.empty()
-                    inventory_group.empty()
+                if event.type == pygame.MOUSEMOTION:
+                    die_dialog_sprites.update(event)
+                    pause_menu_sprites.update(event)
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    die_dialog_sprites.update(event)
+                    pause_menu_sprites.update(event)
+                    if (die_init_flag or pause_init_flag) and return_to_menu.is_clicked():
+                        while_is_true = False
+                        all_sprites.empty()
+                        object_group.empty()
+                        player_group.empty()
+                        interface_group.empty()
+                        inventory_group.empty()
+                    if pause_init_flag and return_to_game.is_clicked():
+                        pygame.time.set_timer(HUNGER_EVENT, 80)  # 7000)
+                        pygame.time.set_timer(WALK_EVENT, 200)
+                        pause_init_flag = False
+                        game_is_running = True
 
-                    screen.fill('#3aebca')
-                    pause_menu_sprites.add(ContinueTablet(10, 50))
-                    pause_menu_sprites.add(SettingsTablet(10, 110))
-                    pause_menu_sprites.add(HelpTablet(10, 170))
-                    pause_menu_sprites.add(ExitTablet(10, 230))
-                    print_text(["ПАУЗА"], 72, (SCREEN_WIDTH // 2 - 255,
-                                               SCREEN_HEIGHT // 2 - 110),
-                               '#efdfbb')
-                    pause_menu_sprites.draw(screen)
-                if event.key == pygame.K_SPACE:
-                    object_group_not_special.update(player.pos_x, player.pos_y)
-                if event.key == pygame.K_9:  # кнопка сохранения
-                    hp, hunger = stats.hp, stats.hunger
-                    map_list[start_y][start_x] = '.'
-                    map_list[player.pos_y][player.pos_x] = '@'
-                    save_game()
-        if go:
-            if pygame.key.get_pressed()[pygame.K_w]:
-                if map_list[player.pos_y - 1][player.pos_x] != '#':
-                    player.pos_y -= 1
-            if pygame.key.get_pressed()[pygame.K_s]:
-                if map_list[player.pos_y + 1][player.pos_x] != '#':
-                    player.pos_y += 1
-            if pygame.key.get_pressed()[pygame.K_a]:
-                if map_list[player.pos_y][player.pos_x - 1] != '#':
-                    player.pos_x -= 1
-            if pygame.key.get_pressed()[pygame.K_d]:
-                if map_list[player.pos_y][player.pos_x + 1] != '#':
-                    player.pos_x += 1
-            go = False
+                if event.type == HUNGER_EVENT:
+                    stats.update(-1)
+                    # код ниже запускает диалог, если персонаж умирает
+                    if stats.current_hp() <= 0:
+                        game_is_running = False
+                        pygame.time.set_timer(HUNGER_EVENT, 0)
+                        pygame.time.set_timer(WALK_EVENT, 0)
 
-        if game_is_running:
-            screen.fill((0, 0, 0))
-            player_group.update()
-            all_sprites.draw(screen)
-            object_group.draw(screen)
-            player_group.draw(screen)
-            interface_group.draw(screen)
-            inventory_group.draw(screen)
-        pygame.display.flip()
+                        all_sprites.empty()
+                        object_group.empty()
+                        player_group.empty()
+                        interface_group.empty()
+                        inventory_group.empty()
+
+                        screen.fill('#4e1818')
+                        lastsave = LoadLastSave(die_dialog_sprites)
+                        return_to_menu = ReturnToMainMenuButton(SCREEN_WIDTH // 2 + 5,
+                                                          SCREEN_HEIGHT // 2 + 20,
+                                                          die_dialog_sprites)
+                        die_init_flag = True
+                        print_text(["Вы погибли".rjust(8, " ")], 72,
+                                   (SCREEN_WIDTH // 2 - 255,
+                                    SCREEN_HEIGHT // 2 - 50), '#efdfbb')
+                        die_dialog_sprites.draw(screen)
+                if event.type == WALK_EVENT:
+                    go = True
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_t:
+                        terminate()
+                    # код ниже запускает меню паузы
+                    if event.key == pygame.K_ESCAPE:
+                        pause_init_flag = True
+                        game_is_running = False
+
+                        pygame.time.set_timer(HUNGER_EVENT, 0)
+                        pygame.time.set_timer(WALK_EVENT, 0)
+
+                        screen.fill('#7a0c72', (SCREEN_WIDTH // 2 - 185, SCREEN_HEIGHT // 2 - 280, 370, 420))
+                        screen.fill('#8c92ac', (SCREEN_WIDTH // 2 - 180, SCREEN_HEIGHT // 2 - 275, 360, 410))
+
+                        return_to_game = PauseReturnToGameButton(SCREEN_WIDTH // 2 - 125, SCREEN_HEIGHT // 2 - 190, pause_menu_sprites)
+                        pause_menu_sprites.add(SettingsTablet(SCREEN_WIDTH // 2 - 125, SCREEN_HEIGHT // 2 - 115))
+                        pause_menu_sprites.add(PauseHelpButton(SCREEN_WIDTH // 2 - 125, SCREEN_HEIGHT // 2 - 40))
+                        return_to_menu = ReturnToMainMenuButton(SCREEN_WIDTH // 2 - 125, SCREEN_HEIGHT // 2 + 35, pause_menu_sprites)
+
+                        print_text(["ПАУЗА"], 72, (SCREEN_WIDTH // 2 - 85,
+                                                   SCREEN_HEIGHT // 2 - 260),
+                                   '#52547a')
+                        pause_menu_sprites.draw(screen)
+                    if event.key == pygame.K_SPACE:
+                        object_group_not_special.update(player.pos_x, player.pos_y)
+                    if event.key == pygame.K_9:  # кнопка сохранения
+                        hp, hunger = stats.hp, stats.hunger
+                        map_list[start_y][start_x] = '.'
+                        map_list[player.pos_y][player.pos_x] = '@'
+                        save_game()
+            if go:
+                if pygame.key.get_pressed()[pygame.K_w]:
+                    if map_list[player.pos_y - 1][player.pos_x] != '#':
+                        player.pos_y -= 1
+                if pygame.key.get_pressed()[pygame.K_s]:
+                    if map_list[player.pos_y + 1][player.pos_x] != '#':
+                        player.pos_y += 1
+                if pygame.key.get_pressed()[pygame.K_a]:
+                    if map_list[player.pos_y][player.pos_x - 1] != '#':
+                        player.pos_x -= 1
+                if pygame.key.get_pressed()[pygame.K_d]:
+                    if map_list[player.pos_y][player.pos_x + 1] != '#':
+                        player.pos_x += 1
+                go = False
+
+            if game_is_running:
+                screen.fill((0, 0, 0))
+                player_group.update()
+                all_sprites.draw(screen)
+                object_group.draw(screen)
+                player_group.draw(screen)
+                interface_group.draw(screen)
+                inventory_group.draw(screen)
+            pygame.display.flip()
+    except Exception as error:
+        print(error.__str__())
 
 
 """--------------------------ВНУТРЕННОСТИ--ИГРЫ-----------------------------"""
@@ -394,7 +412,6 @@ class NewGameTablet(pygame.sprite.Sprite):
     """я решила вынести функцию замены картинки при наведении на кнопку в 
     отдельную функцию, чтобы в дочерних классах менялись только строчки про
     картинки и не приходилось перееопределять полностью self.tablet_moving()"""
-
     def is_active(self, boolian=False):
         if boolian:
             self.image = pygame.transform.scale(NewGameTablet.active_image,
@@ -468,6 +485,44 @@ class ContinueTablet(NewGameTablet):
                 else:
                     num = num[-1][0]
                     load_game(num)
+
+
+class PauseReturnToGameButton(ContinueTablet):
+    image = load_image('return_to_game_button.png')
+    active_image = load_image('return_to_game_active_button.png')
+
+    def __init__(self, x, y, *group):
+        super().__init__(x, y, *group)
+        self.image = pygame.transform.scale(PauseReturnToGameButton.image,
+                                            (250, 70))
+        self.rect = self.image.get_rect().move(x, y)
+        self.clicked_flag = False
+
+    def tablet_moving(self, args):
+        if not self.col_flag and self.rect.collidepoint(args[0].pos):
+            self.col_flag = True
+            self.image = pygame.transform.scale(PauseReturnToGameButton.active_image, (250, 70))
+            for elem in self.groups():
+                elem.draw(screen)
+        elif self.col_flag and not self.rect.collidepoint(args[0].pos):
+            self.col_flag = False
+            self.image = pygame.transform.scale(PauseReturnToGameButton.image, (250, 70))
+            for elem in self.groups():
+                elem.draw(screen)
+
+    def is_clicked(self):
+        return self.clicked_flag
+
+    def update(self, *args):
+        if args:
+            if args[0].type == pygame.MOUSEMOTION:
+                self.tablet_moving(args)
+            if args[0].type == pygame.MOUSEBUTTONDOWN and \
+                    self.rect.collidepoint(args[0].pos):
+                click_sound.play()
+                for elem in self.groups():
+                    elem.empty()
+                self.clicked_flag = True
 
 
 class ExitTablet(NewGameTablet):
@@ -601,6 +656,39 @@ class HelpTablet(NewGameTablet):
                 backbutton_sprite.draw(screen)
 
 
+class PauseHelpButton(HelpTablet):
+    def tablet_moving(self, args):
+        if not self.col_flag and self.rect.collidepoint(args[0].pos):
+            self.col_flag = True
+            self.is_active(True)
+            for elem in self.groups():
+                elem.draw(screen)
+        elif self.col_flag and not self.rect.collidepoint(args[0].pos):
+            self.col_flag = False
+            self.is_active(False)
+            for elem in self.groups():
+                elem.draw(screen)
+
+    def update(self, *args):
+        if args:
+            if args[0].type == pygame.MOUSEMOTION:
+                self.tablet_moving(args)
+            if args[0].type == pygame.MOUSEBUTTONDOWN and \
+                    self.rect.collidepoint(args[0].pos):
+                click_sound.play()
+                for elem in self.groups():
+                    elem.empty()
+                screen.blit(background_picture, (0, 0))
+
+                print_text(["ПОМОЩЬ".rjust(39, ' ')], 100, (20, 10),
+                           "#251733")
+                text = ["Тут будет информация по управлению и мб квестам"]
+                print_text(text, 48, (10, SCREEN_HEIGHT // 2), "#251733")
+
+                backbutton_sprite.add(PauseBackButton())
+                backbutton_sprite.draw(screen)
+
+
 # используется в найстойках, помощи и загрузке для возврата на главный экран
 class BackButton(pygame.sprite.Sprite):
     image = load_image('back_button.png')
@@ -640,17 +728,35 @@ class BackButton(pygame.sprite.Sprite):
                 main_screen_init()
 
 
+class PauseBackButton(BackButton):
+    def update(self, *args):
+        if args:
+            if args[0].type == pygame.MOUSEMOTION:
+                self.tablet_moving(args)
+            if args[0].type == pygame.MOUSEBUTTONDOWN and \
+                    self.rect.collidepoint(args[0].pos):
+                click_sound.play()
+                for elem in self.groups():
+                    elem.empty()
+                music_switch_sprite.empty()
+                all_sprites.draw(screen)
+                object_group.draw(screen)
+                player_group.draw(screen)
+                interface_group.draw(screen)
+                inventory_group.draw(screen)
+                pause_menu_sprites.draw(screen)
+
+
 # после смерти кнопка "выйти в главное меню"
 class ReturnToMainMenuButton(BackButton):
     image = load_image('return_to_main_menu_button.png')
     active_image = load_image('return_to_main_menu_active_button.png')
 
-    def __init__(self, *group):
+    def __init__(self, x, y, *group):
         super().__init__(*group)
         self.image = pygame.transform.scale(ReturnToMainMenuButton.image,
                                             (250, 70))
-        self.rect = self.image.get_rect().move(SCREEN_WIDTH // 2 + 5,
-                                               SCREEN_HEIGHT // 2 + 20)
+        self.rect = self.image.get_rect().move(x, y)
         self.clicked_flag = False
 
     def tablet_moving(self, args):
@@ -659,12 +765,14 @@ class ReturnToMainMenuButton(BackButton):
             self.image = pygame.transform.scale(
                 ReturnToMainMenuButton.active_image,
                 (250, 70))
-            die_dialog_sprites.draw(screen)
+            for elem in self.groups():
+                elem.draw(screen)
         elif self.col_flag and not self.rect.collidepoint(args[0].pos):
             self.col_flag = False
             self.image = pygame.transform.scale(ReturnToMainMenuButton.image,
                                                 (250, 70))
-            die_dialog_sprites.draw(screen)
+            for elem in self.groups():
+                elem.draw(screen)
 
     def is_clicked(self):
         return self.clicked_flag
