@@ -21,8 +21,7 @@ HUNGER_EVENT = pygame.USEREVENT + 1
 WALK_EVENT = pygame.USEREVENT + 2
 
 
-def draw_num(screen, num, x, y, font_size, color=pygame.Color(
-    'white')):  # функция, чтоб показать увеличение предметов думаю, можно потом заменить
+def draw_num(screen, num, x, y, font_size, color=pygame.Color('white')):  # функция, чтоб показать увеличение предметов думаю, можно потом заменить
     font = pygame.font.Font(None, font_size)
     text = font.render(num, True, color)
     screen.blit(text, (x, y))
@@ -134,7 +133,6 @@ def save_game():
     con.close()
 
 
-
 def start_game(map_name):
     global list_of_item, hp, hunger
     player, level_x, level_y = generate_level(load_level(map_name))
@@ -146,11 +144,12 @@ def start_game(map_name):
     list_of_item['branch'] = 1
     inventory_group.update()
 
-    pygame.time.set_timer(HUNGER_EVENT, 200)  # , 7000)
+    pygame.time.set_timer(HUNGER_EVENT, 80)  # , 7000)
     pygame.time.set_timer(WALK_EVENT, 200)
 
     game_is_running = True
     go = False
+    die_init_flag = False
 
     while_is_true = True
     while while_is_true:
@@ -158,14 +157,16 @@ def start_game(map_name):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
+
             if event.type == pygame.MOUSEMOTION:
                 die_dialog_sprites.update(event)
                 pause_menu_sprites.update(event)
             if event.type == pygame.MOUSEBUTTONDOWN:
                 die_dialog_sprites.update(event)
                 pause_menu_sprites.update(event)
-                if die_dialog_sprites and returnto.is_clicked():
+                if die_init_flag and returnto.is_clicked():
                     while_is_true = False
+
             if event.type == HUNGER_EVENT:
                 stats.update(-1)
                 if stats.current_hp() <= 0:
@@ -180,8 +181,9 @@ def start_game(map_name):
                     inventory_group.empty()
 
                     screen.fill('#4e1818')
-                    loadsave = LoadLastSave(die_dialog_sprites)
+                    lastsave = LoadLastSave(die_dialog_sprites)
                     returnto = ReturnToMainMenuButton(die_dialog_sprites)
+                    die_init_flag = True
                     print_text(["Вы погибли".rjust(8, " ")], 72,
                                (SCREEN_WIDTH // 2 - 255,
                                 SCREEN_HEIGHT // 2 - 50), '#efdfbb')
@@ -200,12 +202,6 @@ def start_game(map_name):
                     interface_group.empty()
                     inventory_group.empty()
 
-                    '''screen.fill('#7a0c72', (SCREEN_WIDTH // 2 - 270, 
-                                            SCREEN_HEIGHT // 2 - 105,
-                                            540, 210))
-                    screen.fill('#8c92ac', (SCREEN_WIDTH // 2 - 265, 
-                                            SCREEN_HEIGHT // 2 - 100,
-                                            530, 200))'''
                     screen.fill('#3aebca')
                     pause_menu_sprites.add(ContinueTablet(10, 50))
                     pause_menu_sprites.add(SettingsTablet(10, 110))
@@ -527,11 +523,6 @@ class LoadTablet(NewGameTablet):
                     elem.empty()
                 screen.blit(background_picture, (0, 0))
                 load_game(2)
-                # text = ["Пока не готово"]
-                # print_text(text, 48, (10, SCREEN_HEIGHT // 2), "#251733")
-                #
-                # backbutton_sprite.add(BackButton())
-                # backbutton_sprite.draw(screen)
 
 
 class SettingsTablet(NewGameTablet):
@@ -944,9 +935,9 @@ def main_screen_init():
 
 
 def loading_screen():
-    screen.blit(load_image('loading_screen.png'), (0, 0))
+    screen.blit(load_image('loading_screen.png'), (0, 1))
     pygame.display.flip()
-    time.sleep(1.5)
+    time.sleep(1)
 
 
 if __name__ == '__main__':
