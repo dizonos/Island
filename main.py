@@ -174,8 +174,7 @@ def start_game(map_name):
             if event.type == pygame.MOUSEBUTTONDOWN:
                 die_dialog_sprites.update(event)
                 pause_menu_sprites.update(event)
-                if (
-                        die_init_flag or pause_init_flag) and return_to_menu.is_clicked():
+                if (die_init_flag or pause_init_flag) and return_to_menu.is_clicked():
                     while_is_true = False
                     all_sprites.empty()
                     object_group.empty()
@@ -204,14 +203,9 @@ def start_game(map_name):
 
                     screen.fill('#4e1818')
                     lastsave = LoadLastSave(die_dialog_sprites)
-                    return_to_menu = ReturnToMainMenuButton(
-                        SCREEN_WIDTH // 2 + 5,
-                        SCREEN_HEIGHT // 2 + 20,
-                        die_dialog_sprites)
+                    return_to_menu = ReturnToMainMenuButton(SCREEN_WIDTH // 2 + 5, SCREEN_HEIGHT // 2 + 20, die_dialog_sprites)
                     die_init_flag = True
-                    print_text(["Вы погибли".rjust(8, " ")], 72,
-                               (SCREEN_WIDTH // 2 - 255,
-                                SCREEN_HEIGHT // 2 - 50), '#efdfbb')
+                    print_text(["Вы погибли".rjust(8, " ")], 72, (SCREEN_WIDTH // 2 - 255, SCREEN_HEIGHT // 2 - 50), '#efdfbb')
                     die_dialog_sprites.draw(screen)
             if event.type == WALK_EVENT:
                 go = True
@@ -226,22 +220,18 @@ def start_game(map_name):
                     pygame.time.set_timer(HUNGER_EVENT, 0)
                     pygame.time.set_timer(WALK_EVENT, 0)
 
-                    screen.fill('#7a0c72', (
-                    SCREEN_WIDTH // 2 - 185, SCREEN_HEIGHT // 2 - 280, 370,
-                    420))
-                    screen.fill('#8c92ac', (
-                    SCREEN_WIDTH // 2 - 180, SCREEN_HEIGHT // 2 - 275, 360,
-                    410))
+                    screen.fill('#7a0c72', (SCREEN_WIDTH // 2 - 185, SCREEN_HEIGHT // 2 - 280, 370, 420))
+                    screen.fill('#8c92ac', (SCREEN_WIDTH // 2 - 180, SCREEN_HEIGHT // 2 - 275, 360, 410))
 
                     return_to_game = PauseReturnToGameButton(
                         SCREEN_WIDTH // 2 - 125, SCREEN_HEIGHT // 2 - 190,
                         pause_menu_sprites)
-                    pause_menu_sprites.add(
+                    """pause_menu_sprites.add(
                         SettingsTablet(SCREEN_WIDTH // 2 - 125,
                                        SCREEN_HEIGHT // 2 - 115))
                     pause_menu_sprites.add(
                         PauseHelpButton(SCREEN_WIDTH // 2 - 125,
-                                        SCREEN_HEIGHT // 2 - 40))
+                                        SCREEN_HEIGHT // 2 - 40))"""
                     return_to_menu = ReturnToMainMenuButton(
                         SCREEN_WIDTH // 2 - 125, SCREEN_HEIGHT // 2 + 35,
                         pause_menu_sprites)
@@ -322,6 +312,7 @@ class Camera:
     def apply_y(self, obj, value):
         obj.rect.y += value
 
+
 class Stats(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(interface_group)
@@ -394,6 +385,7 @@ class Tile(pygame.sprite.Sprite):
         self.pos_x = pos_x
         self.pos_y = pos_y
 
+
 class ObjectNotSpecial(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(object_group_not_special,object_group, all_sprites)
@@ -443,52 +435,33 @@ class NewGameTablet(pygame.sprite.Sprite):
         super().__init__(*group)
         self.image = pygame.transform.scale(NewGameTablet.image, (250, 70))
         self.rect = self.image.get_rect().move(pos_x, pos_y)
-        self.pos_x, self.pos_y = pos_x, pos_y
-        """флаг ниже нужен, чтобы программа не проводила отрисовку каждую 
-        секунду, пока курсор наведён на кнопку, а отрисовало один раз и 
-        больше ничего не делало, пока курсор с кнопки не слетит 
-        (см. self.tablet_moving())"""
         self.col_flag = False
 
-    """я решила вынести функцию замены картинки при наведении на кнопку в 
-    отдельную функцию, чтобы в дочерних классах менялись только строчки про
-    картинки и не приходилось перееопределять полностью self.tablet_moving()"""
-    def is_active(self, boolian=False):
+    def pic_change(self, boolian=False):
         if boolian:
             self.image = pygame.transform.scale(NewGameTablet.active_image,
                                                 (250, 70))
         else:
             self.image = pygame.transform.scale(NewGameTablet.image, (250, 70))
 
-    def tablet_moving(self, args):
-        """чтобы анимация кнопки работала эффективно, я не обновляю экран,
-        а закрашиваю область под новой отрисовкой в цвет фона
-        поэтому, прежде чем вставлять другую картинку на фон, убедитесь, что
-        область под кнопками однотонная и в screen.fill() указан этот цвет"""
+    def is_active(self, args):
         if not self.col_flag and self.rect.collidepoint(args[0].pos):
-            screen.fill('#99D9EA', self.rect)
-            self.rect.x = self.pos_x + 10
             self.col_flag = True
-            self.is_active(True)
+            self.pic_change(True)
             tablet_sprites.draw(screen)
         elif self.col_flag and not self.rect.collidepoint(args[0].pos):
-            screen.fill('#99D9EA', self.rect)
-            self.rect.x = self.pos_x
             self.col_flag = False
-            self.is_active(False)
+            self.pic_change(False)
             tablet_sprites.draw(screen)
 
     def update(self, *args):
         if args:
             if args[0].type == pygame.MOUSEMOTION:
-                self.tablet_moving(args)
+                self.is_active(args)
             if args[0].type == pygame.MOUSEBUTTONDOWN and \
                     self.rect.collidepoint(args[0].pos):
                 click_sound.play()  # звук нажатия на кнопку
-                """tablet_sprites нужно очищать, так как иначе кнопки этой 
-                группы будут невидимыми, но активными"""
-                for elem in self.groups():
-                    elem.empty()
+                tablet_sprites.empty()
                 new_game_dialog_init()
 
 
@@ -500,7 +473,7 @@ class ContinueTablet(NewGameTablet):
         super().__init__(pos_x, pos_y, *group)
         self.image = pygame.transform.scale(ContinueTablet.image, (250, 70))
 
-    def is_active(self, boolian=False):
+    def pic_change(self, boolian=False):
         if boolian:
             self.image = pygame.transform.scale(ContinueTablet.active_image,
                                                 (250, 70))
@@ -511,7 +484,7 @@ class ContinueTablet(NewGameTablet):
     def update(self, *args):
         if args:
             if args[0].type == pygame.MOUSEMOTION:
-                self.tablet_moving(args)
+                self.is_active(args)
             if args[0].type == pygame.MOUSEBUTTONDOWN and \
                     self.rect.collidepoint(args[0].pos):
                 click_sound.play()
@@ -539,25 +512,22 @@ class PauseReturnToGameButton(ContinueTablet):
         self.rect = self.image.get_rect().move(x, y)
         self.clicked_flag = False
 
-    def tablet_moving(self, args):
-        if not self.col_flag and self.rect.collidepoint(args[0].pos):
-            self.col_flag = True
-            self.image = pygame.transform.scale(PauseReturnToGameButton.active_image, (250, 70))
-            for elem in self.groups():
-                elem.draw(screen)
-        elif self.col_flag and not self.rect.collidepoint(args[0].pos):
-            self.col_flag = False
-            self.image = pygame.transform.scale(PauseReturnToGameButton.image, (250, 70))
-            for elem in self.groups():
-                elem.draw(screen)
-
     def is_clicked(self):
         return self.clicked_flag
 
     def update(self, *args):
         if args:
             if args[0].type == pygame.MOUSEMOTION:
-                self.tablet_moving(args)
+                if not self.col_flag and self.rect.collidepoint(args[0].pos):
+                    self.col_flag = True
+                    self.image = pygame.transform.scale(PauseReturnToGameButton.active_image, (250, 70))
+                    for elem in self.groups():
+                        elem.draw(screen)
+                elif self.col_flag and not self.rect.collidepoint(args[0].pos):
+                    self.col_flag = False
+                    self.image = pygame.transform.scale(PauseReturnToGameButton.image, (250, 70))
+                    for elem in self.groups():
+                        elem.draw(screen)
             if args[0].type == pygame.MOUSEBUTTONDOWN and \
                     self.rect.collidepoint(args[0].pos):
                 click_sound.play()
@@ -574,163 +544,25 @@ class ExitTablet(NewGameTablet):
         super().__init__(pos_x, pos_y, *group)
         self.image = pygame.transform.scale(ExitTablet.image, (250, 70))
 
-    def is_active(self, boolian=False):
+    def pic_change(self, boolian=False):
         if boolian:
-            self.image = pygame.transform.scale(ExitTablet.active_image,
-                                                (250, 70))
+            self.image = pygame.transform.scale(ExitTablet.active_image, (250, 70))
         else:
             self.image = pygame.transform.scale(ExitTablet.image, (250, 70))
 
     def update(self, *args):
         if args:
             if args[0].type == pygame.MOUSEMOTION:
-                self.tablet_moving(args)
+                self.is_active(args)
             if args[0].type == pygame.MOUSEBUTTONDOWN and \
                     self.rect.collidepoint(args[0].pos):
+                self.col_flag = False
                 click_sound.play()
-                for elem in self.groups():
-                    elem.empty()
+                tablet_sprites.empty()
                 exit_dialog_init()
 
 
-class LoadTablet(NewGameTablet):
-    image = load_image('load_tablet.png')
-    active_image = load_image('load_active_tablet.png')
-
-    def __init__(self, pos_x, pos_y, *group):
-        super().__init__(pos_x, pos_y, *group)
-        self.image = pygame.transform.scale(LoadTablet.image, (250, 70))
-
-    def is_active(self, boolian=False):
-        if boolian:
-            self.image = pygame.transform.scale(LoadTablet.active_image,
-                                                (250, 70))
-        else:
-            self.image = pygame.transform.scale(LoadTablet.image, (250, 70))
-
-    def update(self, *args):
-        if args:
-            if args[0].type == pygame.MOUSEMOTION:
-                self.tablet_moving(args)
-            if args[0].type == pygame.MOUSEBUTTONDOWN and \
-                    self.rect.collidepoint(args[0].pos):
-                click_sound.play()
-                for elem in self.groups():
-                    elem.empty()
-                screen.blit(background_picture, (0, 0))
-                load_game(2)
-
-
-class SettingsTablet(NewGameTablet):
-    image = load_image('settings_tablet.png')
-    active_image = load_image('settings_active_tablet.png')
-
-    def __init__(self, pos_x, pos_y, *group):
-        super().__init__(pos_x, pos_y, *group)
-        self.image = pygame.transform.scale(SettingsTablet.image, (250, 70))
-
-    def is_active(self, boolian=False):
-        if boolian:
-            self.image = pygame.transform.scale(SettingsTablet.active_image,
-                                                (250, 70))
-        else:
-            self.image = pygame.transform.scale(SettingsTablet.image,
-                                                (250, 70))
-
-    def update(self, *args):
-        if args:
-            if args[0].type == pygame.MOUSEMOTION:
-                self.tablet_moving(args)
-            if args[0].type == pygame.MOUSEBUTTONDOWN and \
-                    self.rect.collidepoint(args[0].pos):
-                click_sound.play()
-                for elem in self.groups():
-                    elem.empty()
-                screen.blit(background_picture, (0, 0))
-
-                print_text(["НАСТРОЙКИ".rjust(36, ' ')], 100, (20, 10),
-                           "#251733")
-                text = ["Пока что здесь ничего нет, но вы можете выключить "
-                        "музыку главного меню!".rjust(82, ' ')]
-                print_text(text, 48, (20, 100), "#251733")
-                print_text(["Выключить/включить музыку"], 48, (80, 210),
-                           '#251733')
-
-                backbutton_sprite.add(BackButton())
-                music_switch_sprite.add(MusicSwitchButton())
-                backbutton_sprite.draw(screen)
-                music_switch_sprite.draw(screen)
-
-
-class HelpTablet(NewGameTablet):
-    image = load_image('help_tablet.png')
-    active_image = load_image('help_active_tablet.png')
-
-    def __init__(self, pos_x, pos_y, *group):
-        super().__init__(pos_x, pos_y, *group)
-        self.image = pygame.transform.scale(HelpTablet.image, (250, 70))
-
-    def is_active(self, boolian=False):
-        if boolian:
-            self.image = pygame.transform.scale(HelpTablet.active_image,
-                                                (250, 70))
-        else:
-            self.image = pygame.transform.scale(HelpTablet.image, (250, 70))
-
-    def update(self, *args):
-        if args:
-            if args[0].type == pygame.MOUSEMOTION:
-                self.tablet_moving(args)
-            if args[0].type == pygame.MOUSEBUTTONDOWN and \
-                    self.rect.collidepoint(args[0].pos):
-                click_sound.play()
-                for elem in self.groups():
-                    elem.empty()
-                screen.blit(background_picture, (0, 0))
-
-                print_text(["ПОМОЩЬ".rjust(39, ' ')], 100, (20, 10),
-                           "#251733")
-                text = ["Тут будет информация по управлению и мб квестам"]
-                print_text(text, 48, (10, SCREEN_HEIGHT // 2), "#251733")
-
-                backbutton_sprite.add(BackButton())
-                backbutton_sprite.draw(screen)
-
-
-class PauseHelpButton(HelpTablet):
-    def tablet_moving(self, args):
-        if not self.col_flag and self.rect.collidepoint(args[0].pos):
-            self.col_flag = True
-            self.is_active(True)
-            for elem in self.groups():
-                elem.draw(screen)
-        elif self.col_flag and not self.rect.collidepoint(args[0].pos):
-            self.col_flag = False
-            self.is_active(False)
-            for elem in self.groups():
-                elem.draw(screen)
-
-    def update(self, *args):
-        if args:
-            if args[0].type == pygame.MOUSEMOTION:
-                self.tablet_moving(args)
-            if args[0].type == pygame.MOUSEBUTTONDOWN and \
-                    self.rect.collidepoint(args[0].pos):
-                click_sound.play()
-                for elem in self.groups():
-                    elem.empty()
-                screen.blit(background_picture, (0, 0))
-
-                print_text(["ПОМОЩЬ".rjust(39, ' ')], 100, (20, 10),
-                           "#251733")
-                text = ["Тут будет информация по управлению и мб квестам"]
-                print_text(text, 48, (10, SCREEN_HEIGHT // 2), "#251733")
-
-                backbutton_sprite.add(PauseBackButton())
-                backbutton_sprite.draw(screen)
-
-
-# используется в найстойках, помощи и загрузке для возврата на главный экран
+# используется в настройках, помощи и загрузке для возврата на главный экран
 class BackButton(pygame.sprite.Sprite):
     image = load_image('back_button.png')
     active_image = load_image('back_button_active.png')
@@ -748,13 +580,11 @@ class BackButton(pygame.sprite.Sprite):
             self.col_flag = True
             self.image = pygame.transform.scale(BackButton.active_image,
                                                 (250, 70))
-            backbutton_sprite.draw(screen)
         elif self.col_flag and not self.rect.collidepoint(args[0].pos):
             screen.fill('#99D9EA', self.rect)
             self.col_flag = False
             self.image = pygame.transform.scale(BackButton.image,
                                                 (250, 70))
-            backbutton_sprite.draw(screen)
 
     def update(self, *args):
         if args:
@@ -769,25 +599,6 @@ class BackButton(pygame.sprite.Sprite):
                 main_screen_init()
 
 
-class PauseBackButton(BackButton):
-    def update(self, *args):
-        if args:
-            if args[0].type == pygame.MOUSEMOTION:
-                self.tablet_moving(args)
-            if args[0].type == pygame.MOUSEBUTTONDOWN and \
-                    self.rect.collidepoint(args[0].pos):
-                click_sound.play()
-                for elem in self.groups():
-                    elem.empty()
-                music_switch_sprite.empty()
-                all_sprites.draw(screen)
-                object_group.draw(screen)
-                player_group.draw(screen)
-                interface_group.draw(screen)
-                inventory_group.draw(screen)
-                pause_menu_sprites.draw(screen)
-
-
 # после смерти кнопка "выйти в главное меню"
 class ReturnToMainMenuButton(BackButton):
     image = load_image('return_to_main_menu_button.png')
@@ -800,7 +611,7 @@ class ReturnToMainMenuButton(BackButton):
         self.rect = self.image.get_rect().move(x, y)
         self.clicked_flag = False
 
-    def tablet_moving(self, args):
+    def is_active(self, args):
         if not self.col_flag and self.rect.collidepoint(args[0].pos):
             self.col_flag = True
             self.image = pygame.transform.scale(
@@ -821,7 +632,7 @@ class ReturnToMainMenuButton(BackButton):
     def update(self, *args):
         if args:
             if args[0].type == pygame.MOUSEMOTION:
-                self.tablet_moving(args)
+                self.is_active(args)
             if args[0].type == pygame.MOUSEBUTTONDOWN and \
                     self.rect.collidepoint(args[0].pos):
                 click_sound.play()
@@ -913,8 +724,7 @@ class NoExitButton(pygame.sprite.Sprite):
             if args[0].type == pygame.MOUSEBUTTONDOWN and \
                     self.rect.collidepoint(args[0].pos):
                 click_sound.play()
-                for elem in self.groups():
-                    elem.empty()
+                exit_yesno_sprites.empty()
                 main_screen_init()
 
 
@@ -1032,7 +842,7 @@ def print_text(text, font_point, first_line_pos, text_color, line_space=0):
 
 # эта функция загружает диалоговое окно перед выходом из игры
 def exit_dialog_init():
-    screen.blit(background_picture, (0, 0))
+    screen.blit(background_picture1, (0, 0))
     screen.fill('#7a0c72', (SCREEN_WIDTH // 2 - 270, SCREEN_HEIGHT // 2 - 105,
                             540, 210))
     screen.fill('#8c92ac', (SCREEN_WIDTH // 2 - 265, SCREEN_HEIGHT // 2 - 100,
@@ -1067,20 +877,15 @@ def craft_menu_init():
 # эта функция загружает главный экран
 def main_screen_init():
     screen.blit(background_picture, (0, 0))
+    screen.blit(load_image('title.png', -1), (0, -40))
 
     # инициализация кнопок главного меню
-    start_point = SCREEN_HEIGHT // 3
-    new_tablet = NewGameTablet(20, start_point - 80, tablet_sprites)
-    continue_tablet = ContinueTablet(20, start_point, tablet_sprites)
-    load_tablet = LoadTablet(20, start_point + 80, tablet_sprites)
-    settings_tablet = SettingsTablet(20, start_point + 80 * 2, tablet_sprites)
-    help_tablet = HelpTablet(20, start_point + 80 * 3, tablet_sprites)
-    exit_tablet = ExitTablet(20, start_point + 80 * 4, tablet_sprites)
-    tablet_sprites.draw(screen)
+    start_point = SCREEN_HEIGHT // 2
+    new_tablet = NewGameTablet(SCREEN_WIDTH // 2 - 250 // 2, start_point - 180, tablet_sprites)
+    continue_tablet = ContinueTablet(SCREEN_WIDTH // 2 - 250 // 2, start_point - 100, tablet_sprites)
+    exit_tablet = ExitTablet(SCREEN_WIDTH // 2 - 250 // 2, start_point - 20, tablet_sprites)
 
-    # выводим большую надпись ISLAND
-    print_text(["ISLAND"], 200, (SCREEN_WIDTH // 4 + SCREEN_WIDTH // 12, 10),
-               "#ffa97e")
+    tablet_sprites.draw(screen)
 
 
 def loading_screen():
@@ -1091,6 +896,8 @@ def loading_screen():
 
 if __name__ == '__main__':
     background_picture = pygame.transform.scale(load_image(
+        'background_image2.png'), SCREENSIZE)
+    background_picture1 = pygame.transform.scale(load_image(
         'background_image.png'), SCREENSIZE)
 
     tile_images = {
@@ -1120,7 +927,6 @@ if __name__ == '__main__':
     object_group = pygame.sprite.Group()  # здесь хранятся объекты, с которыми можно будет взаимдейстовать
     # группы спрайтов Даши
     tablet_sprites = pygame.sprite.Group()  # кнопки в меню
-    backbutton_sprite = pygame.sprite.Group()  # кнопка "назад"
     exit_yesno_sprites = pygame.sprite.Group()  # да/нет при выходе из игры
     new_game_yesno_sprites = pygame.sprite.Group()  # да/нет при начале новой игры
     music_switch_sprite = pygame.sprite.Group()  # выключатель музыки
@@ -1145,14 +951,12 @@ if __name__ == '__main__':
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 tablet_sprites.update(event)
-                backbutton_sprite.update(event)
                 exit_yesno_sprites.update(event)
                 new_game_yesno_sprites.update(event)
                 music_switch_sprite.update(event)
 
             elif event.type == pygame.MOUSEMOTION:
                 tablet_sprites.update(event)
-                backbutton_sprite.update(event)
                 exit_yesno_sprites.update(event)
                 new_game_yesno_sprites.update(event)
 
