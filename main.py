@@ -21,6 +21,8 @@ screen = pygame.display.set_mode(SCREENSIZE)
 HUNGER_EVENT = pygame.USEREVENT + 1
 WALK_EVENT = pygame.USEREVENT + 2
 FOOD_EVENT = pygame.USEREVENT + 3
+final = False
+clock = pygame.time.Clock()
 
 
 def draw_num(screen, num, x, y, font_size, color=pygame.Color('white')):  # функция, чтоб показать увеличение предметов думаю, можно потом заменить
@@ -63,6 +65,28 @@ def load_level(filename):
 
     # дополняем каждую строку пустыми клетками ('#')
     return list(map(lambda x: x.ljust(max_width, '#'), level_map))
+
+
+def win():
+    global clock
+    time = clock.tick() // 1000
+    while True:
+        screen.fill(pygame.Color('black'))
+        lastsave = LoadLastSave(die_dialog_sprites)
+        return_to_menu = ReturnToMainMenuButton(
+            SCREEN_WIDTH // 2 + 5,
+            SCREEN_HEIGHT // 2 + 20,
+            die_dialog_sprites)
+        die_init_flag = True
+        print_text(['ВЫ ПОБЕДИЛИ'], 114,
+                   (SCREEN_WIDTH // 2 - 255,
+                    SCREEN_HEIGHT // 2 - 200), pygame.Color('white')
+                   )
+        print_text([f'Итоговое время: {time} секунд'.rjust(2, ' ')], 72,
+                   (SCREEN_WIDTH // 2 - 255,
+                    SCREEN_HEIGHT // 2 - 50), pygame.Color('white'))
+        die_dialog_sprites.draw(screen)
+        pygame.display.flip()
 
 
 def generate_level(level):
@@ -163,9 +187,9 @@ def save_game():
 
 
 def final_window():
-    global list_of_item
-    run = True
-    while run:
+    global list_of_item, final
+    run_final = True
+    while run_final:
         window_group = pygame.sprite.Group()
         button_group = pygame.sprite.Group()
         ExitGameScreen(window_group)
@@ -177,10 +201,15 @@ def final_window():
                 button_group.update(event)
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_b:
-                    run = False
+                    run_final = False
         window_group.draw(screen)
         button_group.draw(screen)
         pygame.display.flip()
+        if final:
+            window_group.empty()
+            button_group.empty()
+            run_final = False
+            win()
 
 
 def start_game(map_name):
@@ -202,6 +231,7 @@ def start_game(map_name):
     game_is_running = True
     while_is_true = True
     camera = Camera()
+
 
     # изменяем ракурс камеры
     for sprite in tiles_group:
@@ -621,7 +651,7 @@ class ArriveButton(pygame.sprite.Sprite):
         }
 
     def update(self, *args):
-        global list_of_item
+        global list_of_item, final
         """if args and args[0].type == pygame.MOUSEBUTTONDOWN and \
                 self.rect.collidepoint(args[0].pos):"""
         if args and args[0].type == pygame.MOUSEMOTION and \
@@ -634,7 +664,8 @@ class ArriveButton(pygame.sprite.Sprite):
                 if i in list_of_item.keys():
                     if list_of_item[i] < self.needs[i]:
                         break
-            terminate()
+            screen.fill((0, 0, 0))
+            final = True
         self.image = pygame.transform.scale(self.image, (250, 70))
 
 
@@ -1352,7 +1383,7 @@ if __name__ == '__main__':
     pygame.mixer.music.play(loops=-1)
 
     click_sound = pygame.mixer.Sound('data/click_sound.mp3')
-    load_game(2)
+    # load_game(2)
     while True:
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
