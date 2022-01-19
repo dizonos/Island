@@ -5,6 +5,7 @@ import os
 import time
 import sqlite3
 import datetime as dt
+from random import choice
 
 # получаем размер монитора и вводим константы
 user32 = ctypes.windll.user32
@@ -19,6 +20,7 @@ pygame.display.set_caption("Island")
 screen = pygame.display.set_mode(SCREENSIZE)
 HUNGER_EVENT = pygame.USEREVENT + 1
 WALK_EVENT = pygame.USEREVENT + 2
+FOOD_EVENT = pygame.USEREVENT + 3
 
 
 def draw_num(screen, num, x, y, font_size, color=pygame.Color('white')):  # функция, чтоб показать увеличение предметов думаю, можно потом заменить
@@ -82,6 +84,28 @@ def generate_level(level):
                 new_player = Player(x, y)
             elif level[y][x] == '2':
                 Tile('poor_sand', x, y)
+            elif level[y][x] == 'c':
+                ObjectNotSpecial('coconut', x, y)
+                Tile('poor_sand', x, y)
+            elif level[y][x] == 'p':
+                SpecialObject('palm', x, y)
+                if choice([1, 2]) == 1:
+                    if map_list[y][x - 1].isdigit():
+                        ObjectNotSpecial('coconut', x - 1, y)
+                else:
+                    if map_list[y][x + 1].isdigit():
+                        ObjectNotSpecial('coconut', x + 1, y)
+                Tile('huge_sand', x, y)
+            elif level[y][x] == 'a':
+                ObjectNotSpecial('axe', x, y)
+                Tile('huge_sand', x, y)
+            elif level[y][x] == 'x':
+                ObjectNotSpecial('pickaxe', x, y)
+                Tile('huge_sand', x, y)
+            elif level[y][x] == 's':
+                SpecialObject('cobblestone', x, y)
+                Tile('poor_sand', x, y)
+
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y
 
@@ -145,9 +169,7 @@ def start_game(map_name):
     stats.update(0)
     list_of_item = dict()
     inventory_group.update()
-    coords = Coordinatsofplayerforcamera()
-
-    pygame.time.set_timer(HUNGER_EVENT, 300)  # , 7000)
+    pygame.time.set_timer(HUNGER_EVENT, 3000)  # , 7000)
     pygame.time.set_timer(WALK_EVENT, 200)
     player_group.draw(screen)
     game_is_running = True
@@ -159,21 +181,22 @@ def start_game(map_name):
     camera = Camera()
     # изменяем ракурс камеры
     for sprite in tiles_group:
-        camera.apply_y(sprite, 0)
+        camera.apply_y(sprite)
     for sprite in object_group:
-        camera.apply_x(sprite, 0)
+        camera.apply_x(sprite)
     while while_is_true:
         """Тут будет обработка нажатий клавиш, уже есть движение"""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
-
             if event.type == pygame.MOUSEMOTION:
                 die_dialog_sprites.update(event)
                 pause_menu_sprites.update(event)
             if event.type == pygame.MOUSEBUTTONDOWN:
                 die_dialog_sprites.update(event)
                 pause_menu_sprites.update(event)
+                if event.button == 3:
+                    inventory_group.update(event.pos)
                 if (
                         die_init_flag or pause_init_flag) and return_to_menu.is_clicked():
                     while_is_true = False
@@ -252,46 +275,39 @@ def start_game(map_name):
                     pause_menu_sprites.draw(screen)
                 if event.key == pygame.K_SPACE:
                     object_group_not_special.update(player.pos_x, player.pos_y)
+                    special_object_group.update(player.pos_x, player.pos_y)
                 if event.key == pygame.K_9:  # кнопка сохранения
                     hp, hunger = stats.hp, stats.hunger
-                    map_list[start_y][start_x] = '.'
+                    map_list[start_y][start_x] = f'{choice([1, 2])}'
                     map_list[player.pos_y][player.pos_x] = '@'
                     save_game()
         if go:
             if pygame.key.get_pressed()[pygame.K_w]:
                 if map_list[player.pos_y - 1][player.pos_x] != '#':
+                    player.rect.y -= 50
                     player.pos_y -= 1
-                    for sprite in tiles_group:
-                        camera.apply_y(sprite, 50)
-                    for sprite in object_group:
-                        camera.apply_y(sprite, 50)
             if pygame.key.get_pressed()[pygame.K_s]:
                 if map_list[player.pos_y + 1][player.pos_x] != '#':
                     player.pos_y += 1
-                    for sprite in tiles_group:
-                        camera.apply_y(sprite, -50)
-                    for sprite in object_group:
-                        camera.apply_y(sprite, -50)
+                    player.rect.y += 50
             if pygame.key.get_pressed()[pygame.K_a]:
                 if map_list[player.pos_y][player.pos_x - 1] != '#':
+                    player.rect.x -= 50
                     player.pos_x -= 1
-                    for sprite in tiles_group:
-                        camera.apply_x(sprite, 50)
-                    for sprite in object_group:
-                        camera.apply_x(sprite, 50)
             if pygame.key.get_pressed()[pygame.K_d]:
                 if map_list[player.pos_y][player.pos_x + 1] != '#':
+                    player.rect.x += 50
                     player.pos_x += 1
-                    for sprite in tiles_group:
-                        camera.apply_x(sprite, -50)
-                    for sprite in object_group:
-                        camera.apply_x(sprite, -50)
             go = False
-
+        camera.update(player)
+        for sprite in all_sprites:
+            camera.apply_x(sprite)
+            camera.apply_y(sprite)
+        camera.dx = 0
+        camera.dy = 0
         if game_is_running:
             screen.fill((0, 0, 0))
             tiles_group.draw(screen)
-            # player_group.update()
             all_sprites.draw(screen)
             player_group.draw(screen)
             object_group.draw(screen)
@@ -303,12 +319,6 @@ def start_game(map_name):
 """--------------------------ВНУТРЕННОСТИ--ИГРЫ-----------------------------"""
 
 
-class Coordinatsofplayerforcamera:
-    def __init__(self):
-        self.x = 0
-        self.y = 0
-
-
 class Camera:
     # зададим начальный сдвиг камеры
     def __init__(self):
@@ -316,11 +326,16 @@ class Camera:
         self.dy = 0
 
     # сдвинуть объект obj на смещение камеры
-    def apply_x(self, obj, value):
-        obj.rect.x += value
+    def apply_x(self, obj):
+        obj.rect.x += self.dx
 
-    def apply_y(self, obj, value):
-        obj.rect.y += value
+    def apply_y(self, obj):
+        obj.rect.y += self.dy
+
+    def update(self, target):
+        self.dx = -(target.rect.x + target.rect.w // 2 - SCREEN_WIDTH // 2) + 30
+        self.dy = -(target.rect.y + target.rect.h // 2 - SCREEN_HEIGHT // 2) + 189
+
 
 class Stats(pygame.sprite.Sprite):
     def __init__(self):
@@ -341,6 +356,7 @@ class Stats(pygame.sprite.Sprite):
             self.hp += self.hunger - 100
             if self.hp > 100:
                 self.hp = 100
+            self.hunger = 100
         elif self.hunger < 0:
             self.hp += self.hunger
             self.hunger = 0
@@ -359,6 +375,50 @@ class Stats(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
 
+class Palma(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y):
+        super().__init__(all_sprites, special_object_group, palm_group, object_group)
+        self.image = tile_images[tile_type]
+        self.pos_x = pos_x
+        self.pos_y = pos_y
+        self.rect = self.image.get_rect().move(
+            tile_width * self.pos_x, tile_height * self.pos_y)
+
+
+class SpecialObject(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y):
+        super().__init__(special_object_group, object_group, all_sprites)
+        self.image = tile_images[tile_type]
+        self.tile_type = tile_type
+        self.pos_x = pos_x
+        self.pos_y = pos_y
+        self.rect = self.image.get_rect().move(
+            tile_width * pos_x, tile_height * pos_y)
+
+    def update(self, *args):
+        for i in Hand.keys():
+            if i == 'axe' and self.tile_type == 'palm':
+                if self.pos_x == args[0] and self.pos_y == args[1]:
+                    map_list[self.pos_y][self.pos_x] = '2'
+                    if 'wood' in list_of_item.keys():  # добавление предмета идёт с проверкой есть ли он в списке
+                        list_of_item['wood'] += 3
+                    else:
+                        list_of_item['wood'] = 3
+                    Hand[i] -= 3
+                    inventory_group.update()
+                    self.kill()
+            elif i == 'pickaxe' and self.tile_type == 'cobblestone':
+                if self.pos_x == args[0] and self.pos_y == args[1]:
+                    map_list[self.pos_y][self.pos_x] = '2'
+                    if 'stone' in list_of_item.keys():  # добавление предмета идёт с проверкой есть ли он в списке
+                        list_of_item['stone'] += 3
+                    else:
+                        list_of_item['stone'] = 3
+                    Hand[i] -= 3
+                    inventory_group.update()
+                    self.kill()
+
+
 class Inventory(pygame.sprite.Sprite): # класс инвентаря( нижней полоски)
     """ классе инвенторя будут в словаре храниться предметы
     при получении нового предмета просто будет перерисовываться инвентарь
@@ -371,18 +431,59 @@ class Inventory(pygame.sprite.Sprite): # класс инвентаря( нижн
         self.image = pygame.transform.scale(self.image, (SCREEN_WIDTH, SCREEN_HEIGHT))
         self.rect = self.image.get_rect()
         self.inventory = list_of_item
+        self.hand = Hand
 
-    def update(self):
+    def update(self, *args):
+        global Hand
         self.image = load_image('inventory.png', -1)
         self.inventory = list_of_item
+        self.hand = Hand
         n = 0
+        for i in self.hand.keys():
+            item_image = load_image(i + '.png', -1)
+            item_image = pygame.transform.scale(item_image, (50, 50))
+            draw_num(item_image, str(self.hand[i]), 35, 35, 25)
+            self.image.blit(item_image, (1134, 1022))
         for i in self.inventory.keys():
             item_image = load_image(i + '.png', -1)
+            item_image = pygame.transform.scale(item_image, (50, 50))
             draw_num(item_image, str(self.inventory[i]), 35, 35, 25)
             self.image.blit(item_image, (255 + 90 * n, 1022))
             n += 1
         self.image = pygame.transform.scale(self.image, (SCREEN_WIDTH, SCREEN_HEIGHT))
         self.rect = self.image.get_rect()
+        if args:
+            if self.rect.collidepoint(args[0][0] * (1920 // SCREEN_HEIGHT), args[0][1] * (1080 // SCREEN_WIDTH)):
+                x = args[0][0] * (1920 // SCREEN_HEIGHT)
+                y = args[0][1]  # * (1080 // SCREEN_WIDTH)
+                c = 0
+                for i in self.inventory.keys():
+                    if 254 + 50 * c <= x <= 254 + 50 * (c + 1) and 1022 <= y <= 1072:
+                        if i == 'coconut':
+                            interface_group.update(5)
+                            list_of_item[i] -= 1
+                            if list_of_item[i] == 0:
+                                del list_of_item[i]
+                                inventory_group.update()
+                                return
+                        if i == 'axe':
+                            if self.hand:
+                                list_of_item['pickaxe'] = Hand['pickaxe']
+                                del Hand['pickaxe']
+                            Hand['axe'] = list_of_item['axe']
+                            del list_of_item[i]
+                            inventory_group.update()
+                            return
+                        if i == 'pickaxe':
+                            if self.hand:
+                                list_of_item['axe'] = Hand['axe']
+                                del Hand['axe']
+                            Hand['pickaxe'] = list_of_item['pickaxe']
+                            del list_of_item[i]
+                            inventory_group.update()
+                            return
+                    c += 1
+                inventory_group.update()
 
 
 class Tile(pygame.sprite.Sprite):
@@ -394,10 +495,14 @@ class Tile(pygame.sprite.Sprite):
         self.pos_x = pos_x
         self.pos_y = pos_y
 
+
 class ObjectNotSpecial(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
-        super().__init__(object_group_not_special,object_group, all_sprites)
+        super().__init__(object_group_not_special, object_group, all_sprites)
         self.image = tile_images[tile_type]
+        if tile_type == 'pickaxe' or tile_type == 'axe':
+            self.image = pygame.transform.rotate(self.image, choice(range(181)))
+            self.image = pygame.transform.scale(self.image, (35, 35))
         self.tile_type = tile_type
         self.pos_x = pos_x
         self.pos_y = pos_y
@@ -406,11 +511,14 @@ class ObjectNotSpecial(pygame.sprite.Sprite):
 
     def update(self, *args):
         if self.pos_x == args[0] and self.pos_y == args[1]:
-            map_list[self.pos_y][self.pos_x] = '.'
-            if self.tile_type in list_of_item.keys(): # добавление предмета идёт с проверкой есть ли он в списке
+            map_list[self.pos_y][self.pos_x] = '1'
+            if self.tile_type in list_of_item.keys():  # добавление предмета идёт с проверкой есть ли он в списке
                 list_of_item[self.tile_type] += 1
             else:
-                list_of_item[self.tile_type] = 1
+                if self.tile_type == 'axe' or self.tile_type == 'pickaxe':
+                    list_of_item[self.tile_type] = 10
+                else:
+                    list_of_item[self.tile_type] = 1
             inventory_group.update()
             self.kill()
 
@@ -420,13 +528,13 @@ class Player(pygame.sprite.Sprite):
         super().__init__(player_group, all_sprites)
         self.image = player_image
         self.rect = self.image.get_rect().move(
-            tile_width * pos_x + 15, tile_height * pos_y + 5)
+            tile_width * pos_x + 15, tile_height * pos_y - 10)
         self.pos_x = pos_x
         self.pos_y = pos_y
 
     def update(self):
         self.rect = self.image.get_rect().move(
-            tile_width * self.pos_x, tile_height * self.pos_y - 5)
+            tile_width * self.pos_x, tile_height * self.pos_y)
 
 
 """-------------------------------------------------------------------------"""
@@ -1098,7 +1206,13 @@ if __name__ == '__main__':
         'water': load_image('ocean.png'),
         'rock': load_image('rock.png', -1),
         'branch': load_image('branch.png', -1),
-        'poor_sand': load_image('poor_sand.png')
+        'poor_sand': load_image('poor_sand.png'),
+        'coconut': load_image('coconut.png', -1),
+        'palm': load_image('palm.png', -1),
+        'ship': load_image('boat.png', -1),
+        'axe': load_image('axe.png', -1),
+        'pickaxe': load_image('pickaxe.png', -1),
+        'cobblestone': load_image('cobblestone.png', -1)
     }
     player_image = load_image('hero.png', -1)
     boat = pygame.image.load('data/boat.png').convert_alpha()
@@ -1107,6 +1221,7 @@ if __name__ == '__main__':
     player = None
     map_list = load_level('map.txt')
     map_list = [list(i) for i in map_list]
+    Hand = dict()
     list_of_item = dict()  # список всех предметов в инвентаря
     hp, hunger = 100, 100
 
@@ -1118,6 +1233,8 @@ if __name__ == '__main__':
     interface_group = pygame.sprite.Group()  # чтоб было удобнее группа интерфейсов
     inventory_group = pygame.sprite.Group()  # группа отвечающая за инвентарь
     object_group = pygame.sprite.Group()  # здесь хранятся объекты, с которыми можно будет взаимдейстовать
+    palm_group = pygame.sprite.Group()
+    special_object_group = pygame.sprite.Group()
     # группы спрайтов Даши
     tablet_sprites = pygame.sprite.Group()  # кнопки в меню
     backbutton_sprite = pygame.sprite.Group()  # кнопка "назад"
@@ -1134,7 +1251,7 @@ if __name__ == '__main__':
     pygame.mixer.music.play(loops=-1)
 
     click_sound = pygame.mixer.Sound('data/click_sound.mp3')
-
+    start_game('map.txt')
     while True:
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
