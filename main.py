@@ -287,18 +287,22 @@ def start_game(map_name):
                 if map_list[player.pos_y - 1][player.pos_x] != '#':
                     player.rect.y -= 50
                     player.pos_y -= 1
+                    player.update('w')
             if pygame.key.get_pressed()[pygame.K_s]:
                 if map_list[player.pos_y + 1][player.pos_x] != '#':
                     player.pos_y += 1
                     player.rect.y += 50
+                    player.update('s')
             if pygame.key.get_pressed()[pygame.K_a]:
                 if map_list[player.pos_y][player.pos_x - 1] != '#':
                     player.rect.x -= 50
                     player.pos_x -= 1
+                    player.update('a')
             if pygame.key.get_pressed()[pygame.K_d]:
                 if map_list[player.pos_y][player.pos_x + 1] != '#':
                     player.rect.x += 50
                     player.pos_x += 1
+                    player.update('d')
             go = False
         camera.update(player)
         for sprite in all_sprites:
@@ -399,7 +403,7 @@ class SpecialObject(pygame.sprite.Sprite):
     def update(self, *args):
         for i in Hand.keys():
             if i == 'axe' and self.tile_type == 'palm':
-                if self.pos_x == args[0] and self.pos_y == args[1]:
+                if self.pos_x == args[0] and self.pos_y == args[1] - 1:
                     map_list[self.pos_y][self.pos_x] = '2'
                     if 'wood' in list_of_item.keys():  # добавление предмета идёт с проверкой есть ли он в списке
                         list_of_item['wood'] += 3
@@ -532,15 +536,16 @@ class ObjectNotSpecial(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(player_group, all_sprites)
-        self.image = player_image
+        self.image = player_image['s']
         self.rect = self.image.get_rect().move(
             tile_width * pos_x + 15, tile_height * pos_y - 10)
         self.pos_x = pos_x
         self.pos_y = pos_y
 
-    def update(self):
-        self.rect = self.image.get_rect().move(
-            tile_width * self.pos_x, tile_height * self.pos_y)
+    def update(self, *args):
+        self.image = player_image[args[0]]
+        # self.rect = self.image.get_rect().move(
+        #     tile_width * self.pos_x, tile_height * self.pos_y)
 
 
 """-------------------------------------------------------------------------"""
@@ -1220,7 +1225,12 @@ if __name__ == '__main__':
         'pickaxe': load_image('pickaxe.png', -1),
         'cobblestone': load_image('cobblestone.png', -1)
     }
-    player_image = load_image('hero.png', -1)
+    player_image = {
+        'd': load_image('hero_d.png', -1),
+        'a': load_image('hero_a.png', -1),
+        's': load_image('hero_s.png', -1),
+        'w': load_image('hero_w.png', -1)
+    }
     boat = pygame.image.load('data/boat.png').convert_alpha()
     tile_width = tile_height = 50
 
