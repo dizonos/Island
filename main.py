@@ -105,12 +105,14 @@ def generate_level(level):
             elif level[y][x] == 's':
                 SpecialObject('cobblestone', x, y)
                 Tile('poor_sand', x, y)
-
+            elif level[y][x] == '!':
+                Boat(x, y)
+                Tile('poor_sand', x, y)
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y
 
 
-def load_game(num): # загрузка сейвоф из бд
+def load_game(num):  # загрузка сейвоф из бд
     global list_of_item, hp, hunger
     con = sqlite3.connect('saves/saves.db')
     cur = con.cursor()
@@ -127,6 +129,7 @@ def load_game(num): # загрузка сейвоф из бд
         for i in range(len(list_of_item1)):
             list_of_item[list_of_item1[i]] = list_of_item_num[i]
     con.close()
+    print(list_of_item, hp, hunger)
     start_game(map_name)
 
 
@@ -159,6 +162,27 @@ def save_game():
     con.close()
 
 
+def final_window():
+    global list_of_item
+    run = True
+    while run:
+        window_group = pygame.sprite.Group()
+        button_group = pygame.sprite.Group()
+        ExitGameScreen(window_group)
+        ArriveButton(739, 645, button_group)
+        for event in pygame.event.get():
+            if event.type == pygame.MOUSEMOTION:
+                button_group.update(event)
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                button_group.update(event)
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_b:
+                    run = False
+        window_group.draw(screen)
+        button_group.draw(screen)
+        pygame.display.flip()
+
+
 def start_game(map_name):
     global list_of_item, hp, hunger
     reserve = tiles_group
@@ -167,7 +191,6 @@ def start_game(map_name):
     stats, inventory = Stats(), Inventory()
     stats.hp, stats.hunger = hp, hunger
     stats.update(0)
-    list_of_item = dict()
     inventory_group.update()
     pygame.time.set_timer(HUNGER_EVENT, 3000)  # , 7000)
     pygame.time.set_timer(WALK_EVENT, 200)
@@ -242,6 +265,7 @@ def start_game(map_name):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_t:
                     terminate()
+
                 # код ниже запускает меню паузы
                 if event.key == pygame.K_ESCAPE:
                     pause_init_flag = True
@@ -277,6 +301,10 @@ def start_game(map_name):
                 if event.key == pygame.K_SPACE:
                     object_group_not_special.update(player.pos_x, player.pos_y)
                     special_object_group.update(player.pos_x, player.pos_y)
+                if event.key == pygame.K_b:
+                    if player.pos_x == 30 and player.pos_y == 23:
+                        print(1)
+                        final_window()
                 if event.key == pygame.K_9:  # кнопка сохранения
                     hp, hunger = stats.hp, stats.hunger
                     map_list[start_y][start_x] = f'{choice([1, 2])}'
@@ -340,6 +368,18 @@ class Camera:
     def update(self, target):
         self.dx = -(target.rect.x + target.rect.w // 2 - SCREEN_WIDTH // 2) + 30
         self.dy = -(target.rect.y + target.rect.h // 2 - SCREEN_HEIGHT // 2) + 189
+
+
+class Boat(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__(all_sprites, object_group)
+        self.image = load_image('boat.png', -1)
+        self.image = pygame.transform.scale(self.image, (250, 150))
+        self.pos_x = x
+        self.pos_y = y
+        print(x, y)
+        self.rect = self.image.get_rect().move(
+            tile_width * self.pos_x, tile_height * self.pos_y)
 
 
 class Stats(pygame.sprite.Sprite):
@@ -446,7 +486,7 @@ class Inventory(pygame.sprite.Sprite):  # класс инвентаря( ниж�
         self.hand = Hand
 
     def update(self, *args):
-        global Hand
+        global Hand, list_of_item
         self.image = load_image('inventory.png', -1)
         self.inventory = list_of_item
         self.hand = Hand
@@ -551,6 +591,51 @@ class Player(pygame.sprite.Sprite):
 """-------------------------------------------------------------------------"""
 
 """------------------------------КНОПКИ-------------------------------------"""
+
+
+class ExitGameScreen(pygame.sprite.Sprite):
+    image = load_image('end_screen.png', -1)
+
+    def __init__(self, *group):
+        super().__init__(*group)
+        self.image = ExitGameScreen.image
+        self.rect = self.image.get_rect()
+
+
+class ArriveButton(pygame.sprite.Sprite):
+    image = load_image('arrive.png')
+    active_image = load_image('arrive_active.png')
+
+    def __init__(self, x, y, *group):
+        super().__init__(*group)
+        self.image = pygame.transform.scale(ArriveButton.image, (250, 70))
+        self.rect = self.image.get_rect().move(x, y)
+        self.pos_x, self.pos_y = x, y
+        self.needs = {
+            'coconut': 10,
+            'rock': 15,
+            'branch': 10,
+            'wood': 20,
+            'stone': 15,
+            'axe': 1
+        }
+
+    def update(self, *args):
+        global list_of_item
+        """if args and args[0].type == pygame.MOUSEBUTTONDOWN and \
+                self.rect.collidepoint(args[0].pos):"""
+        if args and args[0].type == pygame.MOUSEMOTION and \
+            self.rect.collidepoint(args[0].pos):
+            self.image = self.active_image
+        elif args and args[0].type == pygame.MOUSEBUTTONDOWN and \
+                self.rect.collidepoint(args[0].pos):
+            self.image = pygame.transform.scale(self.image, (250, 70))
+            for i in self.needs.keys():
+                if i in list_of_item.keys():
+                    if list_of_item[i] < self.needs[i]:
+                        break
+            terminate()
+        self.image = pygame.transform.scale(self.image, (250, 70))
 
 
 # материнский класс для кнопок в главном меню (и кнопка "Новая игра")
@@ -1267,7 +1352,7 @@ if __name__ == '__main__':
     pygame.mixer.music.play(loops=-1)
 
     click_sound = pygame.mixer.Sound('data/click_sound.mp3')
-    start_game('map.txt')
+    load_game(2)
     while True:
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
