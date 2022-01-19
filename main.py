@@ -179,6 +179,7 @@ def start_game(map_name):
     game_is_running = True
     while_is_true = True
     camera = Camera()
+
     # изменяем ракурс камеры
     for sprite in tiles_group:
         camera.apply_y(sprite)
@@ -405,8 +406,11 @@ class SpecialObject(pygame.sprite.Sprite):
                     else:
                         list_of_item['wood'] = 3
                     Hand[i] -= 3
-                    inventory_group.update()
                     self.kill()
+                    if Hand[i] <= 0:
+                        del Hand[i]
+                        break
+
             elif i == 'pickaxe' and self.tile_type == 'cobblestone':
                 if self.pos_x == args[0] and self.pos_y == args[1]:
                     map_list[self.pos_y][self.pos_x] = '2'
@@ -415,11 +419,15 @@ class SpecialObject(pygame.sprite.Sprite):
                     else:
                         list_of_item['stone'] = 3
                     Hand[i] -= 3
-                    inventory_group.update()
                     self.kill()
+                    if Hand[i] <= 0:
+                        del Hand[i]
+                        break
+
+        inventory_group.update()
 
 
-class Inventory(pygame.sprite.Sprite): # класс инвентаря( нижней полоски)
+class Inventory(pygame.sprite.Sprite):  # класс инвентаря( нижней полоски)
     """ классе инвенторя будут в словаре храниться предметы
     при получении нового предмета просто будет перерисовываться инвентарь
     добавить синхнонизацию по размеру экрана"""
@@ -455,33 +463,31 @@ class Inventory(pygame.sprite.Sprite): # класс инвентаря( нижн
         if args:
             if self.rect.collidepoint(args[0][0] * (1920 // SCREEN_HEIGHT), args[0][1] * (1080 // SCREEN_WIDTH)):
                 x = args[0][0] * (1920 // SCREEN_HEIGHT)
-                y = args[0][1]  # * (1080 // SCREEN_WIDTH)
+                y = args[0][1] # * (1080 // SCREEN_WIDTH)
                 c = 0
                 for i in self.inventory.keys():
-                    if 254 + 50 * c <= x <= 254 + 50 * (c + 1) and 1022 <= y <= 1072:
+                    if 254 + 90 * c <= x <= 304 + 90 * c and 1022 <= y <= 1072:
                         if i == 'coconut':
                             interface_group.update(5)
                             list_of_item[i] -= 1
                             if list_of_item[i] == 0:
                                 del list_of_item[i]
                                 inventory_group.update()
-                                return
+                                break
                         if i == 'axe':
                             if self.hand:
                                 list_of_item['pickaxe'] = Hand['pickaxe']
                                 del Hand['pickaxe']
                             Hand['axe'] = list_of_item['axe']
                             del list_of_item[i]
-                            inventory_group.update()
-                            return
+                            break
                         if i == 'pickaxe':
                             if self.hand:
                                 list_of_item['axe'] = Hand['axe']
                                 del Hand['axe']
                             Hand['pickaxe'] = list_of_item['pickaxe']
                             del list_of_item[i]
-                            inventory_group.update()
-                            return
+                            break
                     c += 1
                 inventory_group.update()
 
