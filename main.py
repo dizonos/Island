@@ -83,6 +83,10 @@ def win():
         die_dialog_sprites.update()
         die_dialog_sprites.draw(screen)
         return_to_menu.update()
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_t:
+                    terminate()
         pygame.display.flip()
 
 
