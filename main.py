@@ -71,11 +71,7 @@ def win():
     time = clock.tick() // 1000
     while True:
         screen.fill(pygame.Color('black'))
-        lastsave = LoadLastSaveButton()
-        return_to_menu = ReturnToMainMenuButton(
-            SCREEN_WIDTH // 2 + 5,
-            SCREEN_HEIGHT // 2 + 20,
-            die_dialog_sprites)
+        return_to_menu = ReturnToMainMenuButton()
         die_init_flag = True
         print_text(['ВЫ ПОБЕДИЛИ'], 114,
                    (SCREEN_WIDTH // 2 - 255,
@@ -84,7 +80,9 @@ def win():
         print_text([f'Итоговое время: {time} секунд'.rjust(2, ' ')], 72,
                    (SCREEN_WIDTH // 2 - 255,
                     SCREEN_HEIGHT // 2 - 50), pygame.Color('white'))
+        die_dialog_sprites.update()
         die_dialog_sprites.draw(screen)
+        return_to_menu.update()
         pygame.display.flip()
 
 
@@ -219,7 +217,6 @@ def start_game(map_name):
     stats, inventory = Stats(), Inventory()
     stats.hp, stats.hunger = hp, hunger
     stats.update(0)
-    list_of_item = dict()
     inventory_group.update()
     HE_speed = 2000
     pygame.time.set_timer(HUNGER_EVENT, HE_speed)
@@ -282,8 +279,9 @@ def start_game(map_name):
                         for elem in crafting.get('pickaxe'):
                             name, quantity = elem.split(':')
                             list_of_item[name] -= int(quantity)
-                        inventory_group.update()
+
                         list_of_item['pickaxe'] = 10 if 'pickaxe' not in list(list_of_item.keys()) else list_of_item['pickaxe'] + 10
+                        inventory_group.update()
                     else:
                         print_text(["Недостаточно ресурсов!", "Нужно: 2 ветки, 2 камня"], 32, (5, 5), (255, 0, 0), 40)
                 if craft_init_flag and axe.is_clicked():
@@ -293,8 +291,8 @@ def start_game(map_name):
                         for elem in crafting.get('axe'):
                             name, quantity = elem.split(':')
                             list_of_item[name] -= int(quantity)
-                        inventory_group.update()
                         list_of_item['axe'] = 10 if 'axe' not in list(list_of_item.keys()) else list_of_item['axe'] + 10
+                        inventory_group.update()
                     else:
                         print_text(["Недостаточно ресурсов!", "Нужно: 2 ветки, 1 камень"], 32, (5, 5), (255, 0, 0), 40)
                 if craft_init_flag and paddle.is_clicked():
@@ -304,8 +302,9 @@ def start_game(map_name):
                         for elem in crafting.get('paddle'):
                             name, quantity = elem.split(':')
                             list_of_item[name] -= int(quantity)
-                        inventory_group.update()
+
                         list_of_item['paddle'] = 10 if 'paddle' not in list(list_of_item.keys()) else list_of_item['paddle'] + 10
+                        inventory_group.update()
                     else:
                         print_text(["Недостаточно ресурсов!", "Нужно: 2 ветки, 2 бревна"], 32, (5, 5), (255, 0, 0), 40)
 
@@ -349,7 +348,6 @@ def start_game(map_name):
                     special_object_group.update(player.pos_x, player.pos_y)
                 if event.key == pygame.K_b:
                     if player.pos_x == 30 and player.pos_y == 23:
-                        print(1)
                         final_window()
                 if event.key == pygame.K_9:  # кнопка сохранения
                     hp, hunger = stats.hp, stats.hunger
@@ -443,7 +441,6 @@ class Boat(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, (250, 150))
         self.pos_x = x
         self.pos_y = y
-        print(x, y)
         self.rect = self.image.get_rect().move(
             tile_width * self.pos_x, tile_height * self.pos_y)
 
@@ -681,7 +678,8 @@ class ArriveButton(pygame.sprite.Sprite):
             'branch': 10,
             'wood': 20,
             'stone': 15,
-            'axe': 1
+            'axe': 1,
+            'paddle': 1
         }
 
     def update(self, *args):
@@ -692,12 +690,19 @@ class ArriveButton(pygame.sprite.Sprite):
         elif args and args[0].type == pygame.MOUSEBUTTONDOWN and \
                 self.rect.collidepoint(args[0].pos):
             self.image = pygame.transform.scale(self.image, (250, 70))
+            fl = False
             for i in self.needs.keys():
                 if i in list_of_item.keys():
-                    if list_of_item[i] < self.needs[i]:
+                    if list_of_item[i] >= self.needs[i]:
+                        fl = True
+                    else:
+                        fl = False
                         break
-            screen.fill((0, 0, 0))
-            final = True
+            if fl:
+                screen.fill((0, 0, 0))
+                final = True
+            else:
+                print_text(["Чего-то не хватает", "Но чего же? Хммм....."], 32, (5, 5), (255, 0, 0), 40)
         self.image = pygame.transform.scale(self.image, (250, 70))
 
 
