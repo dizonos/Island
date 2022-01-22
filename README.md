@@ -33,18 +33,23 @@
 ## Системные требования
 
 **Минимальные системные требования**:
-- требование 1
-- требование 2
+Intel Core 2 Duo E8400 3.0GHz / Core i3 1.6GHz / AMD Athlon II X2 280.
+3 GB ОЗУ
+9600 GT / Radeon HD 4830 / Intel HD5000.
+Место на диске: 300 МБ
+
 
 **Рекомендуемые системные требования**:
-- требование 1
-- требование 2
+Intel Core i5-3570 CPU 3.40 GHz
+8 GB ОЗУ 
+NVIDIA GeForce GTX 970
+Место на диске: 300 МБ
+
 
 
 **Технологические стек**:
 - Python
 - pygame
-- и т.п.
 
 ## Порядок сборки проекта в автономное приложение
 
@@ -56,29 +61,27 @@ pyinstaller --onefile --noconsole main.py
 
 ## Что еще можно доделать
 
-Список того, что хотелось бы доделать
+Усовершенствование системы крафта
+Развитие сюжета
+Возможность автогенерации острова
 
 ## Ресурсы
 
-### Музыка:
-
-- [underwater_mind (2011) the guta jasna](https://www.jamendo.com/track/854045/underwater_mind)
-- [Deep Underwater Panda](https://www.jamendo.com/album/187523/deep-underwater)
-
 ### Звуки:
-- [menu1.wav](https://zvukogram.com/index.php?r=site/download&id=4605&type=wav)
-- [много разных звуковых эффектов](https://zvukogram.com/category/zvuki-vyibora-knopki-v-menyu/)
+ - [Звук нажатия кнопки](https://zvukogram.com/category/zvuki-najatiya-knopki/)
+ - [Звук шума прибоя](https://audioskazki-online.ru/podborki/zvuki-dlya-detey/zvuki-prirody/shum-priboya)
+
 
 ### Изображения:
-- [diver.png](https://cdn4.vectorstock.com/i/1000x1000/94/83/diver-boy-swimming-sprite-vector-3509483.jpg)
+- нарисованы самостоятельно
 
 ## Авторы проекта
 
 ### Соболев Павел Александрович
-Описание этого человека, кто он, что делал в проекте, сильные стороны
+Разрабатывал основные механики игры
 
 ### Панаськов Валерий Андреевич
-Описание этого человека, кто он, что делал в проекте, сильные стороны
+сделал камеру и некоторые спрайты
 
 ### Дзейтова Дарья Дмитриевна
-Описание этого человека, кто он, что делал в проекте, сильные стороны
+Нарисовала почти все интерфейсы, и обработал нажатия кнопок, которые также нарисовала сама
